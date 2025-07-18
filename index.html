@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Sistema de Gestão de Eventos</title>
+          <link rel="stylesheet" href="style.css">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+          <!-- Sidebar -->
+          <div class="sidebar">
+                    <div class="sidebar-header">
+                              <h2><i class="fas fa-calendar-alt"></i> Eventos</h2>
+                    </div>
+                    <div class="sidebar-menu">
+                              <div class="menu-item active" onclick="showTab('dashboard')">
+                                        <i class="fas fa-tachometer-alt"></i>
+                                        <span>Dashboard</span>
+                              </div>
+                              <div class="menu-item" onclick="showTab('events')">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>Eventos</span>
+                              </div>
+                              <div class="menu-item" onclick="showTab('activities')">
+                                        <i class="fas fa-tasks"></i>
+                                        <span>Atividades</span>
+                              </div>
+                              <div class="menu-item" onclick="showTab('participants')">
+                                        <i class="fas fa-users"></i>
+                                        <span>Participantes</span>
+                              </div>
+                              <div class="menu-item" onclick="showTab('registrations')">
+                                        <i class="fas fa-clipboard-list"></i>
+                                        <span>Inscrições</span>
+                              </div>
+                    </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="main-content">
+                    <div class="header">
+                              <h1>Dashboard</h1>
+                              <div>
+                                        <button class="btn btn-secondary"><i class="fas fa-bell"></i></button>
+                                        <button class="btn btn-secondary"><i class="fas fa-user"></i> Admin</button>
+                              </div>
+                    </div>
+
+                    <!-- Dashboard Tab -->
+                    <div id="dashboard" class="tab-content active">
+                              <div class="card">
+                                        <div class="card-header">
+                                                  <h3>Resumo</h3>
+                                        </div>
+                                        <div class="form-row">
+                                                  <div class="card" style="flex: 1;">
+                                                            <h4><i class="fas fa-calendar"></i> Eventos Ativos</h4>
+                                                            <h2 style="color: var(--primary-color);">3</h2>
+                                                  </div>
+                                                  <div class="card" style="flex: 1;">
+                                                            <h4><i class="fas fa-tasks"></i> Atividades</h4>
+                                                            <h2 style="color: var(--primary-color);">15</h2>
+                                                  </div>
+                                                  <div class="card" style="flex: 1;">
+                                                            <h4><i class="fas fa-users"></i> Participantes</h4>
+                                                            <h2 style="color: var(--primary-color);">127</h2>
+                                                  </div>
+                                        </div>
+                              </div>
+
+                              <div class="card">
+                                        <div class="card-header">
+                                                  <h3>Próximos Eventos</h3>
+                                                  <button class="btn btn-primary" onclick="openModal('event')">
+                                                            <i class="fas fa-plus"></i> Novo Evento
+                                                  </button>
+                                        </div>
+                                        <table>
+                                                  <thead>
+                                                            <tr>
+                                                                      <th>Título</th>
+                                                                      <th>Edição</th>
+                                                                      <th>Tipo</th>
+                                                                      <th>Data Início</th>
+                                                                      <th>Data Fim</th>
+                                                                      <th>Ações</th>
+                                                            </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                            <tr>
+                                                                      <td>Seminário de IA</td>
+                                                                      <td>2024</td>
+                                                                      <td>Pago</td>
+                                                                      <td>20/10/2024</td>
+                                                                      <td>22/10/2024</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                            <tr>
+                                                                      <td>Workshop de DevOps</td>
+                                                                      <td>2024</td>
+                                                                      <td>Gratuito</td>
+                                                                      <td>15/11/2024</td>
+                                                                      <td>17/11/2024</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                  </tbody>
+                                        </table>
+                              </div>
+                    </div>
+
+                    <!-- Events Tab -->
+                    <div id="events" class="tab-content">
+                              <div class="card">
+                                        <div class="card-header">
+                                                  <h3>Eventos</h3>
+                                                  <button class="btn btn-primary" onclick="openModal('event')">
+                                                            <i class="fas fa-plus"></i> Novo Evento
+                                                  </button>
+                                        </div>
+                                        <table>
+                                                  <thead>
+                                                            <tr>
+                                                                      <th>Título</th>
+                                                                      <th>Edição</th>
+                                                                      <th>Tipo</th>
+                                                                      <th>Data Início</th>
+                                                                      <th>Data Fim</th>
+                                                                      <th>Taxa</th>
+                                                                      <th>Ações</th>
+                                                            </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                            <tr>
+                                                                      <td>Seminário de IA</td>
+                                                                      <td>2024</td>
+                                                                      <td>Pago</td>
+                                                                      <td>20/10/2024</td>
+                                                                      <td>22/10/2024</td>
+                                                                      <td>R$ 50,00</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                            <tr>
+                                                                      <td>Workshop de DevOps</td>
+                                                                      <td>2024</td>
+                                                                      <td>Gratuito</td>
+                                                                      <td>15/11/2024</td>
+                                                                      <td>17/11/2024</td>
+                                                                      <td>-</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                            <tr>
+                                                                      <td>Conferência de Segurança</td>
+                                                                      <td>2023</td>
+                                                                      <td>Pago</td>
+                                                                      <td>10/05/2023</td>
+                                                                      <td>12/05/2023</td>
+                                                                      <td>R$ 80,00</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                  </tbody>
+                                        </table>
+                              </div>
+                    </div>
+
+                    <!-- Activities Tab -->
+                    <div id="activities" class="tab-content">
+                              <div class="card">
+                                        <div class="card-header">
+                                                  <h3>Atividades</h3>
+                                                  <button class="btn btn-primary" onclick="openModal('activity')">
+                                                            <i class="fas fa-plus"></i> Nova Atividade
+                                                  </button>
+                                        </div>
+                                        <table>
+                                                  <thead>
+                                                            <tr>
+                                                                      <th>Tipo</th>
+                                                                      <th>Título</th>
+                                                                      <th>Evento</th>
+                                                                      <th>Data Início</th>
+                                                                      <th>Data Fim</th>
+                                                                      <th>Vagas</th>
+                                                                      <th>Ações</th>
+                                                            </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                            <tr>
+                                                                      <td>Palestra</td>
+                                                                      <td>Introdução ao NestJS</td>
+                                                                      <td>Seminário de IA</td>
+                                                                      <td>20/10/2024 10:00</td>
+                                                                      <td>20/10/2024 12:00</td>
+                                                                      <td>100</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                            <tr>
+                                                                      <td>Minicurso</td>
+                                                                      <td>Docker para Iniciantes</td>
+                                                                      <td>Workshop de DevOps</td>
+                                                                      <td>15/11/2024 14:00</td>
+                                                                      <td>15/11/2024 18:00</td>
+                                                                      <td>30</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                  </tbody>
+                                        </table>
+                              </div>
+                    </div>
+
+                    <!-- Participants Tab -->
+                    <div id="participants" class="tab-content">
+                              <div class="card">
+                                        <div class="card-header">
+                                                  <h3>Participantes</h3>
+                                                  <button class="btn btn-primary" onclick="openModal('participant')">
+                                                            <i class="fas fa-plus"></i> Novo Participante
+                                                  </button>
+                                        </div>
+                                        <table>
+                                                  <thead>
+                                                            <tr>
+                                                                      <th>Nome</th>
+                                                                      <th>CPF</th>
+                                                                      <th>Telefone</th>
+                                                                      <th>Email</th>
+                                                                      <th>Nascimento</th>
+                                                                      <th>Ações</th>
+                                                            </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                            <tr>
+                                                                      <td>João da Silva</td>
+                                                                      <td>123.456.789-00</td>
+                                                                      <td>(71) 99999-8888</td>
+                                                                      <td>joao.silva@example.com</td>
+                                                                      <td>15/05/1990</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                            <tr>
+                                                                      <td>Maria Oliveira</td>
+                                                                      <td>987.654.321-00</td>
+                                                                      <td>(71) 98888-7777</td>
+                                                                      <td>maria.oliveira@example.com</td>
+                                                                      <td>22/11/1985</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                  </tbody>
+                                        </table>
+                              </div>
+                    </div>
+
+                    <!-- Registrations Tab -->
+                    <div id="registrations" class="tab-content">
+                              <div class="card">
+                                        <div class="card-header">
+                                                  <h3>Inscrições</h3>
+                                                  <button class="btn btn-primary" onclick="openModal('registration')">
+                                                            <i class="fas fa-plus"></i> Nova Inscrição
+                                                  </button>
+                                        </div>
+                                        <table>
+                                                  <thead>
+                                                            <tr>
+                                                                      <th>Participante</th>
+                                                                      <th>Atividade</th>
+                                                                      <th>Tipo</th>
+                                                                      <th>Data</th>
+                                                                      <th>Ações</th>
+                                                            </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                            <tr>
+                                                                      <td>João da Silva</td>
+                                                                      <td>Introdução ao NestJS</td>
+                                                                      <td>Ouvinte</td>
+                                                                      <td>15/09/2024</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                            <tr>
+                                                                      <td>Maria Oliveira</td>
+                                                                      <td>Docker para Iniciantes</td>
+                                                                      <td>Ouvinte</td>
+                                                                      <td>16/09/2024</td>
+                                                                      <td class="actions">
+                                                                                <button class="action-btn view-btn"><i
+                                                                                                    class="fas fa-eye"></i></button>
+                                                                                <button class="action-btn edit-btn"><i
+                                                                                                    class="fas fa-edit"></i></button>
+                                                                                <button class="action-btn delete-btn"><i
+                                                                                                    class="fas fa-trash"></i></button>
+                                                                      </td>
+                                                            </tr>
+                                                  </tbody>
+                                        </table>
+                              </div>
+                    </div>
+          </div>
+
+          <!-- Event Modal -->
+          <div id="event-modal" class="modal">
+                    <div class="modal-content">
+                              <div class="modal-header">
+                                        <h3>Novo Evento</h3>
+                                        <button class="close-btn" onclick="closeModal('event')">&times;</button>
+                              </div>
+                              <form id="form-event">
+                                        <div class="form-group">
+                                                  <label for="event-title">Título</label>
+                                                  <input type="text" id="event-title" required>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="event-edition">Edição</label>
+                                                  <input type="text" id="event-edition" required>
+                                        </div>
+                                        <div class="form-row">
+                                                  <div class="form-group">
+                                                            <label for="event-type">Tipo</label>
+                                                            <select id="event-type" required>
+                                                                      <option value="">Selecione...</option>
+                                                                      <option value="pago">Pago</option>
+                                                                      <option value="gratuito">Gratuito</option>
+                                                            </select>
+                                                  </div>
+                                                  <div class="form-group" id="event-fee-group" style="display: none;">
+                                                            <label for="event-fee">Taxa (R$)</label>
+                                                            <input type="number" id="event-fee" step="0.01" min="0">
+                                                  </div>
+                                        </div>
+                                        <div class="form-row">
+                                                  <div class="form-group">
+                                                            <label for="event-start">Data e Hora de Início</label>
+                                                            <input type="datetime-local" id="event-start" required>
+                                                  </div>
+                                                  <div class="form-group">
+                                                            <label for="event-end">Data e Hora de Término</label>
+                                                            <input type="datetime-local" id="event-end" required>
+                                                  </div>
+                                        </div>
+                                        <div class="form-group">
+                                                  <button type="submit" class="btn btn-primary">Salvar</button>
+                                                  <button type="button" class="btn btn-secondary"
+                                                            onclick="closeModal('event')">Cancelar</button>
+                                        </div>
+                              </form>
+                    </div>
+          </div>
+
+          <!-- Activity Modal -->
+          <div id="activity-modal" class="modal">
+                    <div class="modal-content">
+                              <div class="modal-header">
+                                        <h3>Nova Atividade</h3>
+                                        <button class="close-btn" onclick="closeModal('activity')">&times;</button>
+                              </div>
+                              <form id="form-activity">
+                                        <div class="form-group">
+                                                  <label for="activity-type">Tipo</label>
+                                                  <select id="activity-type" required>
+                                                            <option value="">Selecione...</option>
+                                                            <option value="palestra">Palestra</option>
+                                                            <option value="minicurso">Minicurso</option>
+                                                            <option value="mesa-redonda">Mesa Redonda</option>
+                                                  </select>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="activity-title">Título</label>
+                                                  <input type="text" id="activity-title" required>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="activity-event">Evento</label>
+                                                  <select id="activity-event" required>
+                                                            <option value="">Selecione...</option>
+                                                            <option value="1">Seminário de IA</option>
+                                                            <option value="2">Workshop de DevOps</option>
+                                                  </select>
+                                        </div>
+                                        <div class="form-row">
+                                                  <div class="form-group">
+                                                            <label for="activity-start">Data e Hora de Início</label>
+                                                            <input type="datetime-local" id="activity-start" required>
+                                                  </div>
+                                                  <div class="form-group">
+                                                            <label for="activity-end">Data e Hora de Término</label>
+                                                            <input type="datetime-local" id="activity-end" required>
+                                                  </div>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="activity-max">Quantidade Máxima de Ouvintes</label>
+                                                  <input type="number" id="activity-max" min="1" required>
+                                        </div>
+                                        <div class="form-group">
+                                                  <button type="submit" class="btn btn-primary">Salvar</button>
+                                                  <button type="button" class="btn btn-secondary"
+                                                            onclick="closeModal('activity')">Cancelar</button>
+                                        </div>
+                              </form>
+                    </div>
+          </div>
+
+          <!-- Participant Modal -->
+          <div id="participant-modal" class="modal">
+                    <div class="modal-content">
+                              <div class="modal-header">
+                                        <h3>Novo Participante</h3>
+                                        <button class="close-btn" onclick="closeModal('participant')">&times;</button>
+                              </div>
+                              <form id="form-participant">
+                                        <div class="form-group">
+                                                  <label for="participant-name">Nome Completo</label>
+                                                  <input type="text" id="participant-name" required>
+                                        </div>
+                                        <div class="form-row">
+                                                  <div class="form-group">
+                                                            <label for="participant-cpf">CPF</label>
+                                                            <input type="text" id="participant-cpf"
+                                                                      placeholder="000.000.000-00" required>
+                                                  </div>
+                                                  <div class="form-group">
+                                                            <label for="participant-phone">Telefone</label>
+                                                            <input type="tel" id="participant-phone"
+                                                                      placeholder="(00) 00000-0000" required>
+                                                  </div>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="participant-email">Email</label>
+                                                  <input type="email" id="participant-email" required>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="participant-birth">Data de Nascimento</label>
+                                                  <input type="date" id="participant-birth" required>
+                                        </div>
+                                        <div class="form-group">
+                                                  <button type="submit" class="btn btn-primary">Salvar</button>
+                                                  <button type="button" class="btn btn-secondary"
+                                                            onclick="closeModal('participant')">Cancelar</button>
+                                        </div>
+                              </form>
+                    </div>
+          </div>
+
+          <!-- Registration Modal -->
+          <div id="registration-modal" class="modal">
+                    <div class="modal-content">
+                              <div class="modal-header">
+                                        <h3>Nova Inscrição</h3>
+                                        <button class="close-btn" onclick="closeModal('registration')">&times;</button>
+                              </div>
+                              <form id="form-registration">
+                                        <div class="form-group">
+                                                  <label for="registration-participant">Participante</label>
+                                                  <select id="registration-participant" required>
+                                                            <option value="">Selecione...</option>
+                                                            <option value="1">João da Silva</option>
+                                                            <option value="2">Maria Oliveira</option>
+                                                  </select>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="registration-activity">Atividade</label>
+                                                  <select id="registration-activity" required>
+                                                            <option value="">Selecione...</option>
+                                                            <option value="1">Introdução ao NestJS</option>
+                                                            <option value="2">Docker para Iniciantes</option>
+                                                  </select>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="registration-type">Tipo de Participação</label>
+                                                  <select id="registration-type" required>
+                                                            <option value="">Selecione...</option>
+                                                            <option value="organizador">Organizador</option>
+                                                            <option value="palestrante">Palestrante</option>
+                                                            <option value="mediador">Mediador</option>
+                                                            <option value="monitor">Monitor</option>
+                                                            <option value="ouvinte">Ouvinte</option>
+                                                  </select>
+                                        </div>
+                                        <div class="form-group">
+                                                  <button type="submit" class="btn btn-primary">Salvar</button>
+                                                  <button type="button" class="btn btn-secondary"
+                                                            onclick="closeModal('registration')">Cancelar</button>
+                                        </div>
+                              </form>
+                    </div>
+          </div>
+
+          <script src="script.js"></script>
+</body>
+
+</html>
