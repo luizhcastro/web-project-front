@@ -1,72 +1,697 @@
+// Função para mostrar e esconder abas
 function showTab(tabId) {
-          // Hide all tab contents
-          document.querySelectorAll('.tab-content').forEach(tab => {
-                    tab.classList.remove('active');
-          });
+    // Esconde todos os conteúdos das abas
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
 
-          // Show selected tab content
-          document.getElementById(tabId).classList.add('active');
+    // Mostra o conteúdo da aba selecionada
+    document.getElementById(tabId).classList.add('active');
 
-          // Update active menu item
-          document.querySelectorAll('.menu-item').forEach(item => {
-                    item.classList.remove('active');
-          });
+    // Atualiza o item de menu ativo
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
 
-          // Find the menu item that corresponds to this tab and make it active
-          const menuItems = document.querySelectorAll('.menu-item');
-          for (let i = 0; i < menuItems.length; i++) {
-                    if (menuItems[i].getAttribute('onclick').includes(tabId)) {
-                              menuItems[i].classList.add('active');
-                              break;
-                    }
-          }
+    // Encontra o item de menu que corresponde a esta aba e o torna ativo
+    const menuItems = document.querySelectorAll('.menu-item');
+    for (let i = 0; i < menuItems.length; i++) {
+        if (menuItems[i].getAttribute('onclick').includes(tabId)) {
+            menuItems[i].classList.add('active');
+            break;
+        }
+    }
+
+    // Chama as funções de carregamento para a aba selecionada
+    if (tabId === 'dashboard') {
+        loadDashboardData();
+        loadUpcomingEvents();
+    } else if (tabId === 'events') {
+        loadEvents();
+    } else if (tabId === 'activities') {
+        loadActivities();
+    } else if (tabId === 'participants') {
+        loadParticipants();
+    } else if (tabId === 'registrations') {
+        loadRegistrations();
+    }
 }
 
-// Open modal
-function openModal(type) {
-          document.getElementById(`${type}-modal`).style.display = 'flex';
+// Abre modal
+function openModal(type, data = null) {
+    const modal = document.getElementById(`${type}-modal`);
+    modal.style.display = 'flex';
+
+    // Preenche o formulário para edição se os dados forem fornecidos
+    if (data) {
+        if (type === 'event') {
+            document.getElementById('event-title').value = data.titulo;
+            document.getElementById('event-edition').value = data.edicao;
+            document.getElementById('event-type').value = data.tipo;
+            document.getElementById('event-fee').value = data.taxa || '';
+            document.getElementById('event-start').value = data.dataHoraInicio ? new Date(data.dataHoraInicio).toISOString().slice(0, 16) : '';
+            document.getElementById('event-end').value = data.dataHoraFim ? new Date(data.dataHoraFim).toISOString().slice(0, 16) : '';
+            // Dispara o evento de mudança para mostrar/esconder o campo de taxa
+            document.getElementById('event-type').dispatchEvent(new Event('change'));
+            document.getElementById('form-event').dataset.id = data.idEvento; // ATENÇÃO AQUI: data.idEvento
+        } else if (type === 'activity') {
+            document.getElementById('activity-type').value = data.tipo;
+            document.getElementById('activity-title').value = data.titulo;
+            document.getElementById('activity-event').value = data.fk_idEvento;
+            document.getElementById('activity-start').value = data.dataHoraInicio ? new Date(data.dataHoraInicio).toISOString().slice(0, 16) : '';
+            document.getElementById('activity-end').value = data.dataHoraFim ? new Date(data.dataHoraFim).toISOString().slice(0, 16) : '';
+            document.getElementById('activity-max').value = data.qntdMaximaOuvintes;
+            document.getElementById('form-activity').dataset.id = data.idAtividade; // ATENÇÃO AQUI: data.idAtividade
+        } else if (type === 'participant') {
+            document.getElementById('participant-name').value = data.nome;
+            document.getElementById('participant-cpf').value = data.cpf;
+            document.getElementById('participant-phone').value = data.telefone;
+            document.getElementById('participant-email').value = data.email;
+            document.getElementById('participant-birth').value = data.dataDeNascimento ? new Date(data.dataDeNascimento).toISOString().split('T')[0] : '';
+            document.getElementById('form-participant').dataset.id = data.idParticipante; // ATENÇÃO AQUI: data.idParticipante
+        } else if (type === 'registration') {
+            document.getElementById('registration-participant').value = data.fk_idParticipante;
+            document.getElementById('registration-activity').value = data.fk_idAtividade;
+            document.getElementById('registration-type').value = data.tipo;
+            document.getElementById('form-registration').dataset.id = data.idParticipacao; // ATENÇÃO AQUI: data.idParticipacao
+        }
+    } else {
+        // Limpa o formulário para uma nova entrada
+        const form = modal.querySelector('form');
+        form.reset();
+        delete form.dataset.id; // Remove o ID para uma nova entrada
+        if (type === 'event') {
+            document.getElementById('event-type').dispatchEvent(new Event('change')); // Esconde o campo de taxa para novo evento
+        }
+    }
 }
 
-// Close modal
+// Fecha modal
 function closeModal(type) {
-          document.getElementById(`${type}-modal`).style.display = 'none';
+    document.getElementById(`${type}-modal`).style.display = 'none';
+    document.getElementById(`form-${type}`).reset(); // Reseta o formulário ao fechar
+    delete document.getElementById(`form-${type}`).dataset.id; // Limpa o ID para edição
 }
 
-// Show/hide fee field based on event type
+// Mostra/esconde o campo de taxa com base no tipo de evento
 document.getElementById('event-type').addEventListener('change', function () {
-          const feeGroup = document.getElementById('event-fee-group');
-          if (this.value === 'pago') {
-                    feeGroup.style.display = 'block';
-                    document.getElementById('event-fee').required = true;
-          } else {
-                    feeGroup.style.display = 'none';
-                    document.getElementById('event-fee').required = false;
-          }
+    const feeGroup = document.getElementById('event-fee-group');
+    if (this.value === 'pago') {
+        feeGroup.style.display = 'block';
+        document.getElementById('event-fee').required = true;
+    } else {
+        feeGroup.style.display = 'none';
+        document.getElementById('event-fee').required = false;
+    }
 });
 
-// Close modal when clicking outside
+// Fecha modal ao clicar fora
 window.addEventListener('click', function (event) {
-          if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-          }
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+        // Reseta os formulários ao clicar fora
+        document.querySelectorAll('.modal form').forEach(form => {
+            form.reset();
+            delete form.dataset.id;
+        });
+    }
 });
 
-document.getElementById('form-event').addEventListener('submit', function (e) {
-          e.preventDefault();
-          alert('Evento enviado!');
-          closeModal('event');
-});
+// --- Funções para o modal de mensagem customizado ---
+function showCustomMessage(title, message, isConfirm = false) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-message-modal');
+        document.getElementById('custom-message-title').textContent = title;
+        document.getElementById('custom-message-text').textContent = message;
 
-// Handler para formulário de atividades
-document.getElementById('form-activity').addEventListener('submit', function (e) {
-          e.preventDefault();
-          alert('Atividade enviada!');
-          closeModal('activity');
-});
+        const okBtn = document.getElementById('custom-message-ok-btn');
+        const cancelBtn = document.getElementById('custom-message-cancel-btn');
 
-// Handler para formulário de participantes
-document.getElementById('form-participant').addEventListener('submit', function (e) {
-          e.preventDefault();
-          alert('Participante enviado!');
-          closeModal('participant');
+        okBtn.onclick = () => {
+            closeCustomMessageModal();
+            resolve(true);
+        };
+
+        if (isConfirm) {
+            cancelBtn.style.display = 'inline-block';
+            cancelBtn.onclick = () => {
+                closeCustomMessageModal();
+                resolve(false);
+            };
+        } else {
+            cancelBtn.style.display = 'none';
+        }
+
+        modal.style.display = 'flex';
+    });
+}
+
+function closeCustomMessageModal() {
+    document.getElementById('custom-message-modal').style.display = 'none';
+}
+
+
+const BASE_URL = 'http://localhost:3000';
+
+// Função auxiliar para requisições à API
+async function fetchData(url, method = 'GET', data = null) {
+    const options = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+    if (data) {
+        options.body = JSON.stringify(data);
+    }
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Algo deu errado');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Erro na API:', error);
+        showCustomMessage('Erro', 'Erro: ' + error.message);
+        return null;
+    }
+}
+
+// --- Funções do Dashboard ---
+async function loadDashboardData() {
+    const events = await fetchData(`${BASE_URL}/evento`);
+    const activities = await fetchData(`${BASE_URL}/atividade`);
+    const participants = await fetchData(`${BASE_URL}/participante`);
+
+    if (events) {
+        document.getElementById('dashboard-active-events').textContent = events.length;
+    }
+    if (activities) {
+        document.getElementById('dashboard-activities').textContent = activities.length;
+    }
+    if (participants) {
+        document.getElementById('dashboard-participants').textContent = participants.length;
+    }
+}
+
+async function loadUpcomingEvents() {
+    const eventsTableBody = document.getElementById('upcoming-events-table-body');
+    eventsTableBody.innerHTML = ''; // Limpa as linhas existentes
+
+    const events = await fetchData(`${BASE_URL}/evento`);
+
+    if (events) {
+        // Filtra por eventos futuros (exemplo: eventos que começam no futuro)
+        const now = new Date();
+        const upcomingEvents = events.filter(event => new Date(event.dataHoraInicio) > now);
+
+        if (upcomingEvents.length === 0) {
+            eventsTableBody.innerHTML = '<tr><td colspan="6">Nenhum evento futuro encontrado.</td></tr>';
+            return;
+        }
+
+        upcomingEvents.forEach(event => {
+            const row = eventsTableBody.insertRow();
+            row.innerHTML = `
+                <td>${event.titulo}</td>
+                <td>${event.edicao}</td>
+                <td>${event.tipo === 'pago' ? 'Pago' : 'Gratuito'}</td>
+                <td>${new Date(event.dataHoraInicio).toLocaleDateString('pt-BR')}</td>
+                <td>${new Date(event.dataHoraFim).toLocaleDateString('pt-BR')}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewEvent('${event.idEvento}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editEvent('${event.idEvento}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteEvent('${event.idEvento}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    }
+}
+
+// --- Funções de Eventos ---
+async function loadEvents() {
+    const eventsTableBody = document.getElementById('events-table-body');
+    eventsTableBody.innerHTML = ''; // Limpa as linhas existentes
+
+    const events = await fetchData(`${BASE_URL}/evento`);
+
+    if (events) {
+        if (events.length === 0) {
+            eventsTableBody.innerHTML = '<tr><td colspan="7">Nenhum evento cadastrado.</td></tr>';
+            return;
+        }
+        events.forEach(event => {
+            const row = eventsTableBody.insertRow();
+            row.innerHTML = `
+                <td>${event.titulo}</td>
+                <td>${event.edicao}</td>
+                <td>${event.tipo === 'pago' ? 'Pago' : 'Gratuito'}</td>
+                <td>${new Date(event.dataHoraInicio).toLocaleDateString('pt-BR')}</td>
+                <td>${new Date(event.dataHoraFim).toLocaleDateString('pt-BR')}</td>
+                <td>${event.taxa ? `R$ ${event.taxa.toFixed(2).replace('.', ',')}` : '-'}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewEvent('${event.idEvento}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editEvent('${event.idEvento}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteEvent('${event.idEvento}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    }
+}
+
+async function saveEvent(e) {
+    e.preventDefault();
+    const id = e.target.dataset.id;
+    const titulo = document.getElementById('event-title').value;
+    const edicao = document.getElementById('event-edition').value;
+    const tipo = document.getElementById('event-type').value;
+    const dataHoraInicio = document.getElementById('event-start').value;
+    const dataHoraFim = document.getElementById('event-end').value;
+    let taxa = null;
+
+    if (tipo === 'pago') {
+        taxa = parseFloat(document.getElementById('event-fee').value);
+        if (isNaN(taxa)) {
+            showCustomMessage('Erro', 'Por favor, insira um valor válido para a taxa.');
+            return;
+        }
+    }
+
+    const eventData = {
+        titulo,
+        edicao,
+        tipo,
+        dataHoraInicio: new Date(dataHoraInicio).toISOString(),
+        dataHoraFim: new Date(dataHoraFim).toISOString(),
+    };
+
+    if (tipo === 'pago') {
+        eventData.taxa = taxa;
+    }
+
+    let result;
+    if (id) {
+        result = await fetchData(`${BASE_URL}/evento/${id}`, 'PATCH', eventData);
+        if (result) showCustomMessage('Sucesso', 'Evento atualizado com sucesso!');
+    } else {
+        result = await fetchData(`${BASE_URL}/evento`, 'POST', eventData);
+        if (result) showCustomMessage('Sucesso', 'Evento criado com sucesso!');
+    }
+
+    if (result) {
+        closeModal('event');
+        loadEvents();
+        loadUpcomingEvents(); // Atualiza o dashboard após alterações no evento
+        loadDashboardData();
+    }
+}
+
+async function viewEvent(id) {
+    const event = await fetchData(`${BASE_URL}/evento/${id}`);
+    if (event) {
+        let details = `
+            Título: ${event.titulo}
+            Edição: ${event.edicao}
+            Tipo: ${event.tipo === 'pago' ? 'Pago' : 'Gratuito'}
+            Início: ${new Date(event.dataHoraInicio).toLocaleString('pt-BR')}
+            Fim: ${new Date(event.dataHoraFim).toLocaleString('pt-BR')}
+            Taxa: ${event.taxa ? `R$ ${event.taxa.toFixed(2).replace('.', ',')}` : '-'}
+        `;
+        showCustomMessage('Detalhes do Evento', details);
+    }
+}
+
+async function editEvent(id) {
+    const event = await fetchData(`${BASE_URL}/evento/${id}`);
+    if (event) {
+        openModal('event', event);
+    }
+}
+
+async function deleteEvent(id) {
+    const confirmed = await showCustomMessage('Confirmação', 'Tem certeza que deseja excluir este evento?', true);
+    if (confirmed) {
+        const result = await fetchData(`${BASE_URL}/evento/${id}`, 'DELETE');
+        if (result) {
+            showCustomMessage('Sucesso', 'Evento excluído com sucesso!');
+            loadEvents();
+            loadUpcomingEvents(); // Atualiza o dashboard após alterações no evento
+            loadDashboardData();
+        }
+    }
+}
+
+document.getElementById('form-event').addEventListener('submit', saveEvent);
+
+// --- Funções de Atividades ---
+async function loadActivities() {
+    const activitiesTableBody = document.getElementById('activities-table-body');
+    activitiesTableBody.innerHTML = ''; // Limpa as linhas existentes
+
+    const activities = await fetchData(`${BASE_URL}/atividade`);
+    const events = await fetchData(`${BASE_URL}/evento`); // Para obter os títulos dos eventos
+
+    if (activities) {
+        if (activities.length === 0) {
+            activitiesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma atividade cadastrada.</td></tr>';
+            return;
+        }
+        activities.forEach(activity => {
+            const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A'; // ATENÇÃO AQUI: e.idEvento
+            const row = activitiesTableBody.insertRow();
+            row.innerHTML = `
+                <td>${activity.tipo}</td>
+                <td>${activity.titulo}</td>
+                <td>${eventTitle}</td>
+                <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
+                <td>${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}</td>
+                <td>${activity.qntdMaximaOuvintes}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewActivity('${activity.idAtividade}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editActivity('${activity.idAtividade}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteActivity('${activity.idAtividade}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    }
+
+    // Preenche o dropdown de eventos no modal de atividade
+    const activityEventSelect = document.getElementById('activity-event');
+    activityEventSelect.innerHTML = '<option value="">Selecione...</option>';
+    if (events) {
+        events.forEach(event => {
+            const option = document.createElement('option');
+            option.value = event.idEvento; // ATENÇÃO AQUI: event.idEvento
+            option.textContent = event.titulo;
+            activityEventSelect.appendChild(option);
+        });
+    }
+}
+
+async function saveActivity(e) {
+    e.preventDefault();
+    const id = e.target.dataset.id;
+    const tipo = document.getElementById('activity-type').value;
+    const titulo = document.getElementById('activity-title').value;
+    const fk_idEvento = parseInt(document.getElementById('activity-event').value);
+    const dataHoraInicio = document.getElementById('activity-start').value;
+    const dataHoraFim = document.getElementById('activity-end').value;
+    const qntdMaximaOuvintes = parseInt(document.getElementById('activity-max').value);
+
+    if (isNaN(fk_idEvento) || isNaN(qntdMaximaOuvintes)) {
+        showCustomMessage('Erro', 'Por favor, preencha todos os campos numéricos corretamente.');
+        return;
+    }
+
+    const activityData = {
+        tipo,
+        titulo,
+        fk_idEvento,
+        dataHoraInicio: new Date(dataHoraInicio).toISOString(),
+        dataHoraFim: new Date(dataHoraFim).toISOString(),
+        qntdMaximaOuvintes
+    };
+
+    let result;
+    if (id) {
+        result = await fetchData(`${BASE_URL}/atividade/${id}`, 'PATCH', activityData);
+        if (result) showCustomMessage('Sucesso', 'Atividade atualizada com sucesso!');
+    } else {
+        result = await fetchData(`${BASE_URL}/atividade`, 'POST', activityData);
+        if (result) showCustomMessage('Sucesso', 'Atividade criada com sucesso!');
+    }
+
+    if (result) {
+        closeModal('activity');
+        loadActivities();
+        loadDashboardData();
+    }
+}
+
+async function viewActivity(id) {
+    const activity = await fetchData(`${BASE_URL}/atividade/${id}`);
+    if (activity) {
+        const event = await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`); // ATENÇÃO AQUI: activity.fk_idEvento
+        let details = `
+            Tipo: ${activity.tipo}
+            Título: ${activity.titulo}
+            Evento: ${event ? event.titulo : 'N/A'}
+            Início: ${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}
+            Fim: ${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}
+            Vagas: ${activity.qntdMaximaOuvintes}
+        `;
+        showCustomMessage('Detalhes da Atividade', details);
+    }
+}
+
+async function editActivity(id) {
+    const activity = await fetchData(`${BASE_URL}/atividade/${id}`);
+    if (activity) {
+        openModal('activity', activity);
+    }
+}
+
+async function deleteActivity(id) {
+    const confirmed = await showCustomMessage('Confirmação', 'Tem certeza que deseja excluir esta atividade?', true);
+    if (confirmed) {
+        const result = await fetchData(`${BASE_URL}/atividade/${id}`, 'DELETE');
+        if (result) {
+            showCustomMessage('Sucesso', 'Atividade excluída com sucesso!');
+            loadActivities();
+            loadDashboardData();
+        }
+    }
+}
+
+document.getElementById('form-activity').addEventListener('submit', saveActivity);
+
+// --- Funções de Participantes ---
+async function loadParticipants() {
+    const participantsTableBody = document.getElementById('participants-table-body');
+    participantsTableBody.innerHTML = ''; // Limpa as linhas existentes
+
+    const participants = await fetchData(`${BASE_URL}/participante`);
+
+    if (participants) {
+        if (participants.length === 0) {
+            participantsTableBody.innerHTML = '<tr><td colspan="6">Nenhum participante cadastrado.</td></tr>';
+            return;
+        }
+        participants.forEach(participant => {
+            const row = participantsTableBody.insertRow();
+            row.innerHTML = `
+                <td>${participant.nome}</td>
+                <td>${participant.cpf}</td>
+                <td>${participant.telefone}</td>
+                <td>${participant.email}</td>
+                <td>${new Date(participant.dataDeNascimento).toLocaleDateString('pt-BR')}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewParticipant('${participant.idParticipante}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editParticipant('${participant.idParticipante}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteParticipant('${participant.idParticipante}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    }
+}
+
+async function saveParticipant(e) {
+    e.preventDefault();
+    const id = e.target.dataset.id;
+    const nome = document.getElementById('participant-name').value;
+    const cpf = document.getElementById('participant-cpf').value;
+    const telefone = document.getElementById('participant-phone').value;
+    const email = document.getElementById('participant-email').value;
+    const dataDeNascimento = document.getElementById('participant-birth').value;
+
+    const participantData = {
+        nome,
+        cpf,
+        telefone,
+        email,
+        dataDeNascimento: new Date(dataDeNascimento).toISOString()
+    };
+
+    let result;
+    if (id) {
+        result = await fetchData(`${BASE_URL}/participante/${id}`, 'PATCH', participantData);
+        if (result) showCustomMessage('Sucesso', 'Participante atualizado com sucesso!');
+    } else {
+        result = await fetchData(`${BASE_URL}/participante`, 'POST', participantData);
+        if (result) showCustomMessage('Sucesso', 'Participante criado com sucesso!');
+    }
+
+    if (result) {
+        closeModal('participant');
+        loadParticipants();
+        loadDashboardData();
+    }
+}
+
+async function viewParticipant(id) {
+    const participant = await fetchData(`${BASE_URL}/participante/${id}`);
+    if (participant) {
+        let details = `
+            Nome: ${participant.nome}
+            CPF: ${participant.cpf}
+            Telefone: ${participant.telefone}
+            Email: ${participant.email}
+            Nascimento: ${new Date(participant.dataDeNascimento).toLocaleDateString('pt-BR')}
+        `;
+        showCustomMessage('Detalhes do Participante', details);
+    }
+}
+
+async function editParticipant(id) {
+    const participant = await fetchData(`${BASE_URL}/participante/${id}`);
+    if (participant) {
+        openModal('participant', participant);
+    }
+}
+
+async function deleteParticipant(id) {
+    const confirmed = await showCustomMessage('Confirmação', 'Tem certeza que deseja excluir este participante?', true);
+    if (confirmed) {
+        const result = await fetchData(`${BASE_URL}/participante/${id}`, 'DELETE');
+        if (result) {
+            showCustomMessage('Sucesso', 'Participante excluído com sucesso!');
+            loadParticipants();
+            loadDashboardData();
+        }
+    }
+}
+
+document.getElementById('form-participant').addEventListener('submit', saveParticipant);
+
+// --- Funções de Inscrições ---
+async function loadRegistrations() {
+    const registrationsTableBody = document.getElementById('registrations-table-body');
+    registrationsTableBody.innerHTML = ''; // Limpa as linhas existentes
+
+    const registrations = await fetchData(`${BASE_URL}/participacao`);
+    const participants = await fetchData(`${BASE_URL}/participante`);
+    const activities = await fetchData(`${BASE_URL}/atividade`);
+
+    if (registrations) {
+        if (registrations.length === 0) {
+            registrationsTableBody.innerHTML = '<tr><td colspan="5">Nenhuma inscrição cadastrada.</td></tr>';
+            return;
+        }
+        registrations.forEach(registration => {
+            const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A'; // ATENÇÃO AQUI: p.idParticipante
+            const activityTitle = activities ? (activities.find(a => a.idAtividade === registration.fk_idAtividade)?.titulo || 'N/A') : 'N/A'; // ATENÇÃO AQUI: a.idAtividade
+            const row = registrationsTableBody.insertRow();
+            row.innerHTML = `
+                <td>${participantName}</td>
+                <td>${activityTitle}</td>
+                <td>${registration.tipo}</td>
+                <td>${new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR')}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editRegistration('${registration.idParticipacao}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteRegistration('${registration.idParticipacao}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    }
+
+    // Preenche os dropdowns de participante e atividade no modal de inscrição
+    const registrationParticipantSelect = document.getElementById('registration-participant');
+    registrationParticipantSelect.innerHTML = '<option value="">Selecione...</option>';
+    if (participants) {
+        participants.forEach(participant => {
+            const option = document.createElement('option');
+            option.value = participant.idParticipante; // ATENÇÃO AQUI: participant.idParticipante
+            option.textContent = participant.nome;
+            registrationParticipantSelect.appendChild(option);
+        });
+    }
+
+    const registrationActivitySelect = document.getElementById('registration-activity');
+    registrationActivitySelect.innerHTML = '<option value="">Selecione...</option>';
+    if (activities) {
+        activities.forEach(activity => {
+            const option = document.createElement('option');
+            option.value = activity.idAtividade; // ATENÇÃO AQUI: activity.idAtividade
+            option.textContent = activity.titulo;
+            registrationActivitySelect.appendChild(option);
+        });
+    }
+}
+
+async function saveRegistration(e) {
+    e.preventDefault();
+    const id = e.target.dataset.id;
+    const fk_idParticipante = parseInt(document.getElementById('registration-participant').value);
+    const fk_idAtividade = parseInt(document.getElementById('registration-activity').value);
+    const tipo = document.getElementById('registration-type').value;
+
+    if (isNaN(fk_idParticipante) || isNaN(fk_idAtividade)) {
+        showCustomMessage('Erro', 'Por favor, selecione um participante e uma atividade.');
+        return;
+    }
+
+    const registrationData = {
+        fk_idParticipante,
+        fk_idAtividade,
+        tipo,
+        // A API define automaticamente dataHoraRegistro
+    };
+
+    let result;
+    if (id) {
+        result = await fetchData(`${BASE_URL}/participacao/${id}`, 'PATCH', { tipo }); // Apenas 'tipo' pode ser atualizado para participação
+        if (result) showCustomMessage('Sucesso', 'Inscrição atualizada com sucesso!');
+    } else {
+        result = await fetchData(`${BASE_URL}/participacao`, 'POST', registrationData);
+        if (result) showCustomMessage('Sucesso', 'Inscrição criada com sucesso!');
+    }
+
+    if (result) {
+        closeModal('registration');
+        loadRegistrations();
+    }
+}
+
+async function viewRegistration(id) {
+    const registration = await fetchData(`${BASE_URL}/participacao/${id}`);
+    if (registration) {
+        const participant = await fetchData(`${BASE_URL}/participante/${registration.fk_idParticipante}`);
+        const activity = await fetchData(`${BASE_URL}/atividade/${registration.fk_idAtividade}`);
+
+        let details = `
+            Participante: ${participant ? participant.nome : 'N/A'}
+            Atividade: ${activity ? activity.titulo : 'N/A'}
+            Tipo de Participação: ${registration.tipo}
+            Data de Registro: ${new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR')}
+        `;
+        showCustomMessage('Detalhes da Inscrição', details);
+    }
+}
+
+async function editRegistration(id) {
+    const registration = await fetchData(`${BASE_URL}/participacao/${id}`);
+    if (registration) {
+        openModal('registration', registration);
+    }
+}
+
+async function deleteRegistration(id) {
+    const confirmed = await showCustomMessage('Confirmação', 'Tem certeza que deseja excluir esta inscrição?', true);
+    if (confirmed) {
+        const result = await fetchData(`${BASE_URL}/participacao/${id}`, 'DELETE');
+        if (result) {
+            showCustomMessage('Sucesso', 'Inscrição excluída com sucesso!');
+            loadRegistrations();
+        }
+    }
+}
+
+document.getElementById('form-registration').addEventListener('submit', saveRegistration);
+
+
+// Carregamento inicial
+document.addEventListener('DOMContentLoaded', () => {
+    showTab('dashboard'); // Carrega o conteúdo do dashboard inicialmente
 });
