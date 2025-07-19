@@ -148,7 +148,8 @@ function showCustomMessage(title, message, isConfirm = false) {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-message-modal');
         document.getElementById('custom-message-title').textContent = title;
-        document.getElementById('custom-message-text').textContent = message;
+        // CORREÇÃO AQUI: Usar innerHTML e substituir \n por <br>
+        document.getElementById('custom-message-text').innerHTML = message.replace(/\n/g, '<br>');
 
         const okBtn = document.getElementById('custom-message-ok-btn');
         const cancelBtn = document.getElementById('custom-message-cancel-btn');
@@ -329,14 +330,66 @@ async function saveEvent(e) {
 
 async function viewEvent(id) {
     const event = await fetchData(`${BASE_URL}/evento/${id}`);
+    const activities = await fetchData(`${BASE_URL}/atividade`);
+    const participations = await fetchData(`${BASE_URL}/participacao`);
+
     if (event) {
+        let organizadorCount = 0;
+        let palestranteCount = 0;
+        let mediadorCount = 0;
+        let monitorCount = 0;
+        let ouvinteCount = 0;
+        let totalParticipants = 0;
+
+        // Filtra atividades pertencentes ao evento atual
+        const eventActivities = activities ? activities.filter(a => a.fk_idEvento === event.idEvento) : [];
+        const eventActivityIds = new Set(eventActivities.map(a => a.idAtividade));
+
+        if (participations) {
+            participations.forEach(p => {
+                if (eventActivityIds.has(p.fk_idAtividade)) {
+                    totalParticipants++;
+                    switch (p.tipo) {
+                        case 'organizador':
+                            organizadorCount++;
+                            break;
+                        case 'palestrante':
+                            palestranteCount++;
+                            break;
+                        case 'mediador':
+                            mediadorCount++;
+                            break;
+                        case 'monitor':
+                            monitorCount++;
+                            break;
+                        case 'ouvinte':
+                            ouvinteCount++;
+                            break;
+                    }
+                }
+            });
+        }
+
+        const receita = event.tipo === 'pago'
+            ? `R$ ${(ouvinteCount * (event.taxa || 0)).toFixed(2).replace('.', ',')}`
+            : '-';
+
         let details = `
-            Título: ${event.titulo}
-            Edição: ${event.edicao}
-            Tipo: ${event.tipo === 'pago' ? 'Pago' : 'Gratuito'}
-            Início: ${new Date(event.dataHoraInicio).toLocaleString('pt-BR')}
-            Fim: ${new Date(event.dataHoraFim).toLocaleString('pt-BR')}
-            Taxa: ${event.taxa ? `R$ ${event.taxa.toFixed(2).replace('.', ',')}` : '-'}
+Título: ${event.titulo}
+Edição: ${event.edicao}
+Tipo: ${event.tipo === 'pago' ? 'Pago' : 'Gratuito'}
+Data Início: ${new Date(event.dataHoraInicio).toLocaleString('pt-BR')}
+Data Fim: ${new Date(event.dataHoraFim).toLocaleString('pt-BR')}
+Taxa: ${event.taxa ? `R$ ${event.taxa.toFixed(2).replace('.', ',')}` : '-'}
+
+Organizadores: ${organizadorCount}
+Palestrantes: ${palestranteCount}
+Mediadores: ${mediadorCount}
+Monitores: ${monitorCount}
+Ouvintes: ${ouvinteCount}
+
+Total de Participantes: ${totalParticipants}
+Receita: ${receita}
         `;
         showCustomMessage('Detalhes do Evento', details);
     }
@@ -456,15 +509,16 @@ async function saveActivity(e) {
 
 async function viewActivity(id) {
     const activity = await fetchData(`${BASE_URL}/atividade/${id}`);
+    const event = activity ? await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`) : null;
+
     if (activity) {
-        const event = await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`);
         let details = `
-            Tipo: ${activity.tipo}
-            Título: ${activity.titulo}
-            Evento: ${event ? event.titulo : 'N/A'}
-            Início: ${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}
-            Fim: ${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}
-            Vagas: ${activity.qntdMaximaOuvintes}
+Tipo: ${activity.tipo}
+Título: ${activity.titulo}
+Evento: ${event ? event.titulo : 'N/A'}
+Data Início: ${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}
+Data Fim: ${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}
+Vagas Máximas: ${activity.qntdMaximaOuvintes}
         `;
         showCustomMessage('Detalhes da Atividade', details);
     }
@@ -556,11 +610,11 @@ async function viewParticipant(id) {
     const participant = await fetchData(`${BASE_URL}/participante/${id}`);
     if (participant) {
         let details = `
-            Nome: ${participant.nome}
-            CPF: ${participant.cpf}
-            Telefone: ${participant.telefone}
-            Email: ${participant.email}
-            Nascimento: ${new Date(participant.dataDeNascimento).toLocaleDateString('pt-BR')}
+Nome: ${participant.nome}
+CPF: ${participant.cpf}
+Telefone: ${participant.telefone}
+Email: ${participant.email}
+Data de Nascimento: ${new Date(participant.dataDeNascimento).toLocaleDateString('pt-BR')}
         `;
         showCustomMessage('Detalhes do Participante', details);
     }
@@ -731,11 +785,11 @@ async function viewRegistration(id) {
         const event = activity ? await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`) : null;
 
         let details = `
-            Participante: ${participant ? participant.nome : 'N/A'}
-            Evento: ${event ? event.titulo : 'N/A'}
-            Atividade: ${activity ? activity.titulo : 'N/A'}
-            Tipo de Participação: ${registration.tipo}
-            Data de Registro: ${registration.dataHoraRegistro ? new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR') : 'N/A'}
+Participante: ${participant ? participant.nome : 'N/A'}
+Evento: ${event ? event.titulo : 'N/A'}
+Atividade: ${activity ? activity.titulo : 'N/A'}
+Tipo de Participação: ${registration.tipo}
+Data de Registro: ${registration.dataHoraRegistro ? new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR') : 'N/A'}
         `;
         showCustomMessage('Detalhes da Inscrição', details);
     }
