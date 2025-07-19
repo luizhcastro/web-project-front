@@ -34,8 +34,9 @@ function showTab(tabId) {
         loadParticipants();
     } else if (tabId === 'registrations') {
         loadRegistrations();
-        // Quando a aba de inscrições é mostrada, populamos os dropdowns
-        populateRegistrationDropdowns();
+        populateRegistrationDropdowns(); // Popula os dropdowns ao abrir o modal de inscrição
+    } else if (tabId === 'certificates') { // NOVA ABA
+        loadCertificatesTab();
     }
 }
 
@@ -209,15 +210,9 @@ async function loadDashboardData() {
     const activities = await fetchData(`${BASE_URL}/atividade`);
     const participants = await fetchData(`${BASE_URL}/participante`);
 
-    if (events) {
-        document.getElementById('dashboard-active-events').textContent = events.length;
-    }
-    if (activities) {
-        document.getElementById('dashboard-activities').textContent = activities.length;
-    }
-    if (participants) {
-        document.getElementById('dashboard-participants').textContent = participants.length;
-    }
+    document.getElementById('dashboard-active-events').textContent = events ? events.length : 0;
+    document.getElementById('dashboard-activities').textContent = activities ? activities.length : 0;
+    document.getElementById('dashboard-participants').textContent = participants ? participants.length : 0;
 }
 
 async function loadUpcomingEvents() {
@@ -226,7 +221,7 @@ async function loadUpcomingEvents() {
 
     const events = await fetchData(`${BASE_URL}/evento`);
 
-    if (events) {
+    if (events && events.length > 0) {
         // Filtra por eventos futuros (exemplo: eventos que começam no futuro)
         const now = new Date();
         const upcomingEvents = events.filter(event => new Date(event.dataHoraInicio) > now);
@@ -251,6 +246,8 @@ async function loadUpcomingEvents() {
                 </td>
             `;
         });
+    } else {
+        eventsTableBody.innerHTML = '<tr><td colspan="6">Nenhum evento futuro encontrado.</td></tr>';
     }
 }
 
@@ -261,11 +258,7 @@ async function loadEvents() {
 
     const events = await fetchData(`${BASE_URL}/evento`);
 
-    if (events) {
-        if (events.length === 0) {
-            eventsTableBody.innerHTML = '<tr><td colspan="7">Nenhum evento cadastrado.</td></tr>';
-            return;
-        }
+    if (events && events.length > 0) {
         events.forEach(event => {
             const row = eventsTableBody.insertRow();
             row.innerHTML = `
@@ -282,6 +275,8 @@ async function loadEvents() {
                 </td>
             `;
         });
+    } else {
+        eventsTableBody.innerHTML = '<tr><td colspan="7">Nenhum evento cadastrado.</td></tr>';
     }
 }
 
@@ -377,28 +372,26 @@ async function loadActivities() {
     const activities = await fetchData(`${BASE_URL}/atividade`);
     const events = await fetchData(`${BASE_URL}/evento`); // Para obter os títulos dos eventos
 
-    if (activities) {
-        if (activities.length === 0) {
-            activitiesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma atividade cadastrada.</td></tr>';
-        } else {
-            activities.forEach(activity => {
-                const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
-                const row = activitiesTableBody.insertRow();
-                row.innerHTML = `
-                    <td>${activity.tipo}</td>
-                    <td>${activity.titulo}</td>
-                    <td>${eventTitle}</td>
-                    <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
-                    <td>${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}</td>
-                    <td>${activity.qntdMaximaOuvintes}</td>
-                    <td class="actions">
-                        <button class="action-btn view-btn" onclick="viewActivity('${activity.idAtividade}')"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn edit-btn" onclick="editActivity('${activity.idAtividade}')"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete-btn" onclick="deleteActivity('${activity.idAtividade}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                `;
-            });
-        }
+    if (activities && activities.length > 0) {
+        activities.forEach(activity => {
+            const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
+            const row = activitiesTableBody.insertRow();
+            row.innerHTML = `
+                <td>${activity.tipo}</td>
+                <td>${activity.titulo}</td>
+                <td>${eventTitle}</td>
+                <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
+                <td>${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}</td>
+                <td>${activity.qntdMaximaOuvintes}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewActivity('${activity.idAtividade}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editActivity('${activity.idAtividade}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteActivity('${activity.idAtividade}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    } else {
+        activitiesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma atividade cadastrada.</td></tr>';
     }
 
     // Preenche o dropdown de eventos no modal de atividade
@@ -505,11 +498,7 @@ async function loadParticipants() {
 
     const participants = await fetchData(`${BASE_URL}/participante`);
 
-    if (participants) {
-        if (participants.length === 0) {
-            participantsTableBody.innerHTML = '<tr><td colspan="6">Nenhum participante cadastrado.</td></tr>';
-            return;
-        }
+    if (participants && participants.length > 0) {
         participants.forEach(participant => {
             const row = participantsTableBody.insertRow();
             row.innerHTML = `
@@ -525,6 +514,8 @@ async function loadParticipants() {
                 </td>
             `;
         });
+    } else {
+        participantsTableBody.innerHTML = '<tr><td colspan="6">Nenhum participante cadastrado.</td></tr>';
     }
 }
 
@@ -606,30 +597,28 @@ async function loadRegistrations() {
     const activities = await fetchData(`${BASE_URL}/atividade`);
     const events = await fetchData(`${BASE_URL}/evento`); // Buscar todos os eventos
 
-    if (registrations) {
-        if (registrations.length === 0) {
-            registrationsTableBody.innerHTML = '<tr><td colspan="5">Nenhuma inscrição cadastrada.</td></tr>';
-        } else {
-            registrations.forEach(registration => {
-                const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A';
-                const activity = activities ? activities.find(a => a.idAtividade === registration.fk_idAtividade) : null;
-                const activityTitle = activity ? activity.titulo : 'N/A';
-                const eventTitle = (activity && events) ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
+    if (registrations && registrations.length > 0) {
+        registrations.forEach(registration => {
+            const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A';
+            const activity = activities ? activities.find(a => a.idAtividade === registration.fk_idAtividade) : null;
+            const activityTitle = activity ? activity.titulo : 'N/A';
+            const eventTitle = (activity && events) ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
 
-                const row = registrationsTableBody.insertRow();
-                row.innerHTML = `
-                    <td>${participantName}</td>
-                    <td>${eventTitle}</td>
-                    <td>${activityTitle}</td>
-                    <td>${registration.tipo}</td>
-                    <td class="actions">
-                        <button class="action-btn view-btn" onclick="viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn edit-btn" onclick="editRegistration('${registration.idParticipacao}')"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete-btn" onclick="deleteRegistration('${registration.idParticipacao}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                `;
-            });
-        }
+            const row = registrationsTableBody.insertRow();
+            row.innerHTML = `
+                <td>${participantName}</td>
+                <td>${eventTitle}</td>
+                <td>${activityTitle}</td>
+                <td>${registration.tipo}</td>
+                <td class="actions">
+                    <button class="action-btn view-btn" onclick="viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn edit-btn" onclick="editRegistration('${registration.idParticipacao}')"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteRegistration('${registration.idParticipacao}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    } else {
+        registrationsTableBody.innerHTML = '<tr><td colspan="5">Nenhuma inscrição cadastrada.</td></tr>';
     }
 }
 
@@ -682,7 +671,7 @@ document.getElementById('registration-event').addEventListener('change', async f
 
     if (selectedEventId) {
         // Busca atividades relacionadas ao evento selecionado
-        const activities = await fetchData(`${BASE_URL}/atividade/evento/${selectedEventId}`); // Assumindo este endpoint
+        const activities = await fetchData(`${BASE_URL}/atividade/evento/${selectedEventId}`);
         if (activities && activities.length > 0) {
             activities.forEach(activity => {
                 const option = document.createElement('option');
@@ -771,6 +760,145 @@ async function deleteRegistration(id) {
 }
 
 document.getElementById('form-registration').addEventListener('submit', saveRegistration);
+
+// --- Funções para a aba de Certificados ---
+async function loadCertificatesTab() {
+    const certificateEventSelect = document.getElementById('certificate-event');
+    const certificateActivitySelect = document.getElementById('certificate-activity');
+    const certificateParticipantSelect = document.getElementById('certificate-participant');
+    const participationTypeDisplay = document.getElementById('participation-type-display');
+    const participationResultGroup = document.getElementById('participation-result-group');
+
+    // Limpar e popular dropdown de Eventos
+    certificateEventSelect.innerHTML = '<option value="">Selecione um evento...</option>';
+    const events = await fetchData(`${BASE_URL}/evento`);
+    if (events && events.length > 0) {
+        events.forEach(event => {
+            const option = document.createElement('option');
+            option.value = event.idEvento;
+            option.textContent = event.titulo;
+            certificateEventSelect.appendChild(option);
+        });
+    }
+
+    // Limpar e popular dropdown de Participantes
+    certificateParticipantSelect.innerHTML = '<option value="">Selecione uma atividade primeiro...</option>';
+    certificateParticipantSelect.disabled = true; // Inicialmente desabilitado
+
+    // Limpar e desabilitar dropdown de Atividades
+    certificateActivitySelect.innerHTML = '<option value="">Selecione um evento primeiro...</option>';
+    certificateActivitySelect.disabled = true;
+
+    // Esconder resultado da participação
+    participationResultGroup.style.display = 'none';
+    participationTypeDisplay.textContent = '';
+}
+
+// Event listener para o dropdown de Eventos na aba de Certificados
+document.getElementById('certificate-event').addEventListener('change', async function () {
+    const selectedEventId = this.value;
+    const certificateActivitySelect = document.getElementById('certificate-activity');
+    const certificateParticipantSelect = document.getElementById('certificate-participant');
+    const participationTypeDisplay = document.getElementById('participation-type-display');
+    const participationResultGroup = document.getElementById('participation-result-group');
+
+    certificateActivitySelect.innerHTML = '<option value="">Selecione...</option>';
+    certificateActivitySelect.disabled = true;
+    certificateParticipantSelect.innerHTML = '<option value="">Selecione uma atividade primeiro...</option>';
+    certificateParticipantSelect.disabled = true;
+    participationResultGroup.style.display = 'none';
+    participationTypeDisplay.textContent = '';
+
+    if (selectedEventId) {
+        const activities = await fetchData(`${BASE_URL}/atividade/evento/${selectedEventId}`);
+        if (activities && activities.length > 0) {
+            activities.forEach(activity => {
+                const option = document.createElement('option');
+                option.value = activity.idAtividade;
+                option.textContent = activity.titulo;
+                certificateActivitySelect.appendChild(option);
+            });
+            certificateActivitySelect.disabled = false;
+        } else {
+            certificateActivitySelect.innerHTML += '<option value="" disabled>Nenhuma atividade para este evento</option>';
+        }
+    } else {
+        certificateActivitySelect.innerHTML = '<option value="">Selecione um evento primeiro...</option>';
+    }
+});
+
+// Event listener para o dropdown de Atividades na aba de Certificados
+document.getElementById('certificate-activity').addEventListener('change', async function () {
+    const selectedActivityId = this.value;
+    const certificateParticipantSelect = document.getElementById('certificate-participant');
+    const participationTypeDisplay = document.getElementById('participation-type-display');
+    const participationResultGroup = document.getElementById('participation-result-group');
+
+    certificateParticipantSelect.innerHTML = '<option value="">Selecione...</option>';
+    certificateParticipantSelect.disabled = true;
+    participationResultGroup.style.display = 'none';
+    participationTypeDisplay.textContent = '';
+
+    if (selectedActivityId) {
+        // Para popular os participantes, precisamos de todos os participantes
+        // e depois filtrar aqueles que participaram desta atividade específica
+        const participants = await fetchData(`${BASE_URL}/participante`);
+        const participations = await fetchData(`${BASE_URL}/participacao`); // Buscar todas as participações
+
+        const participantsInActivity = new Set();
+        if (participations && participants) {
+            participations.forEach(p => {
+                if (p.fk_idAtividade == selectedActivityId) { // Comparação com == para permitir string/number
+                    participantsInActivity.add(p.fk_idParticipante);
+                }
+            });
+
+            participants.forEach(participant => {
+                if (participantsInActivity.has(participant.idParticipante)) {
+                    const option = document.createElement('option');
+                    option.value = participant.idParticipante;
+                    option.textContent = participant.nome;
+                    certificateParticipantSelect.appendChild(option);
+                }
+            });
+            if (certificateParticipantSelect.options.length > 1) { // Se houver mais que a opção "Selecione..."
+                certificateParticipantSelect.disabled = false;
+            } else {
+                certificateParticipantSelect.innerHTML += '<option value="" disabled>Nenhum participante nesta atividade</option>';
+            }
+        } else {
+            certificateParticipantSelect.innerHTML += '<option value="" disabled>Nenhum participante disponível</option>';
+        }
+    } else {
+        certificateParticipantSelect.innerHTML = '<option value="">Selecione uma atividade primeiro...</option>';
+    }
+});
+
+// Event listener para o botão "Verificar Participação"
+document.getElementById('check-participation-btn').addEventListener('click', async function () {
+    const selectedActivityId = document.getElementById('certificate-activity').value;
+    const selectedParticipantId = document.getElementById('certificate-participant').value;
+    const participationTypeDisplay = document.getElementById('participation-type-display');
+    const participationResultGroup = document.getElementById('participation-result-group');
+
+    participationTypeDisplay.textContent = '';
+    participationResultGroup.style.display = 'none';
+
+    if (!selectedActivityId || !selectedParticipantId) {
+        showCustomMessage('Erro', 'Por favor, selecione um evento, uma atividade e um participante.');
+        return;
+    }
+
+    // Requisição ao novo endpoint do backend para buscar a participação específica
+    const participation = await fetchData(`${BASE_URL}/participacao/by-atividade-participante/${selectedActivityId}/${selectedParticipantId}`);
+
+    if (participation && participation.tipo) {
+        participationTypeDisplay.textContent = participation.tipo.charAt(0).toUpperCase() + participation.tipo.slice(1); // Capitaliza a primeira letra
+        participationResultGroup.style.display = 'block';
+    } else {
+        showCustomMessage('Informação', 'Participação não encontrada para a combinação selecionada.');
+    }
+});
 
 
 // Carregamento inicial
