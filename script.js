@@ -34,6 +34,8 @@ function showTab(tabId) {
         loadParticipants();
     } else if (tabId === 'registrations') {
         loadRegistrations();
+        // Quando a aba de inscrições é mostrada, populamos os dropdowns
+        populateRegistrationDropdowns();
     }
 }
 
@@ -41,6 +43,15 @@ function showTab(tabId) {
 function openModal(type, data = null) {
     const modal = document.getElementById(`${type}-modal`);
     modal.style.display = 'flex';
+
+    // Limpa o formulário para uma nova entrada ou preenche para edição
+    const form = modal.querySelector('form');
+    form.reset();
+    delete form.dataset.id; // Remove o ID para uma nova entrada
+
+    if (type === 'event') {
+        document.getElementById('event-type').dispatchEvent(new Event('change')); // Esconde o campo de taxa para novo evento
+    }
 
     // Preenche o formulário para edição se os dados forem fornecidos
     if (data) {
@@ -51,9 +62,8 @@ function openModal(type, data = null) {
             document.getElementById('event-fee').value = data.taxa || '';
             document.getElementById('event-start').value = data.dataHoraInicio ? new Date(data.dataHoraInicio).toISOString().slice(0, 16) : '';
             document.getElementById('event-end').value = data.dataHoraFim ? new Date(data.dataHoraFim).toISOString().slice(0, 16) : '';
-            // Dispara o evento de mudança para mostrar/esconder o campo de taxa
             document.getElementById('event-type').dispatchEvent(new Event('change'));
-            document.getElementById('form-event').dataset.id = data.idEvento;
+            form.dataset.id = data.idEvento;
         } else if (type === 'activity') {
             document.getElementById('activity-type').value = data.tipo;
             document.getElementById('activity-title').value = data.titulo;
@@ -61,27 +71,32 @@ function openModal(type, data = null) {
             document.getElementById('activity-start').value = data.dataHoraInicio ? new Date(data.dataHoraInicio).toISOString().slice(0, 16) : '';
             document.getElementById('activity-end').value = data.dataHoraFim ? new Date(data.dataHoraFim).toISOString().slice(0, 16) : '';
             document.getElementById('activity-max').value = data.qntdMaximaOuvintes;
-            document.getElementById('form-activity').dataset.id = data.idAtividade;
+            form.dataset.id = data.idAtividade;
         } else if (type === 'participant') {
             document.getElementById('participant-name').value = data.nome;
             document.getElementById('participant-cpf').value = data.cpf;
             document.getElementById('participant-phone').value = data.telefone;
             document.getElementById('participant-email').value = data.email;
             document.getElementById('participant-birth').value = data.dataDeNascimento ? new Date(data.dataDeNascimento).toISOString().split('T')[0] : '';
-            document.getElementById('form-participant').dataset.id = data.idParticipante;
+            form.dataset.id = data.idParticipante;
         } else if (type === 'registration') {
+            // Para edição de inscrição, precisamos pré-selecionar evento e atividade
+            form.dataset.id = data.idParticipacao;
             document.getElementById('registration-participant').value = data.fk_idParticipante;
-            document.getElementById('registration-activity').value = data.fk_idAtividade;
             document.getElementById('registration-type').value = data.tipo;
-            document.getElementById('form-registration').dataset.id = data.idParticipacao;
-        }
-    } else {
-        // Limpa o formulário para uma nova entrada
-        const form = modal.querySelector('form');
-        form.reset();
-        delete form.dataset.id; // Remove o ID para uma nova entrada
-        if (type === 'event') {
-            document.getElementById('event-type').dispatchEvent(new Event('change')); // Esconde o campo de taxa para novo evento
+
+            // Encontra a atividade para obter o fk_idEvento
+            fetchData(`${BASE_URL}/atividade/${data.fk_idAtividade}`).then(activity => {
+                if (activity) {
+                    document.getElementById('registration-event').value = activity.fk_idEvento;
+                    // Dispara o evento de mudança para popular as atividades corretas
+                    document.getElementById('registration-event').dispatchEvent(new Event('change'));
+                    // Aguarda um pouco para garantir que as atividades foram populadas antes de selecionar
+                    setTimeout(() => {
+                        document.getElementById('registration-activity').value = data.fk_idAtividade;
+                    }, 100);
+                }
+            });
         }
     }
 }
@@ -91,6 +106,11 @@ function closeModal(type) {
     document.getElementById(`${type}-modal`).style.display = 'none';
     document.getElementById(`form-${type}`).reset(); // Reseta o formulário ao fechar
     delete document.getElementById(`form-${type}`).dataset.id; // Limpa o ID para edição
+    // Para o modal de inscrição, reseta o estado do dropdown de atividades
+    if (type === 'registration') {
+        document.getElementById('registration-activity').innerHTML = '<option value="">Selecione um evento primeiro...</option>';
+        document.getElementById('registration-activity').disabled = true;
+    }
 }
 
 // Mostra/esconde o campo de taxa com base no tipo de evento
@@ -114,6 +134,11 @@ window.addEventListener('click', function (event) {
             form.reset();
             delete form.dataset.id;
         });
+        // Para o modal de inscrição, reseta o estado do dropdown de atividades
+        if (event.target.id === 'registration-modal') {
+            document.getElementById('registration-activity').innerHTML = '<option value="">Selecione um evento primeiro...</option>';
+            document.getElementById('registration-activity').disabled = true;
+        }
     }
 });
 
@@ -579,6 +604,7 @@ async function loadRegistrations() {
     const registrations = await fetchData(`${BASE_URL}/participacao`);
     const participants = await fetchData(`${BASE_URL}/participante`);
     const activities = await fetchData(`${BASE_URL}/atividade`);
+    const events = await fetchData(`${BASE_URL}/evento`); // Buscar todos os eventos
 
     if (registrations) {
         if (registrations.length === 0) {
@@ -586,13 +612,16 @@ async function loadRegistrations() {
         } else {
             registrations.forEach(registration => {
                 const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A';
-                const activityTitle = activities ? (activities.find(a => a.idAtividade === registration.fk_idAtividade)?.titulo || 'N/A') : 'N/A';
+                const activity = activities ? activities.find(a => a.idAtividade === registration.fk_idAtividade) : null;
+                const activityTitle = activity ? activity.titulo : 'N/A';
+                const eventTitle = (activity && events) ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
+
                 const row = registrationsTableBody.insertRow();
                 row.innerHTML = `
                     <td>${participantName}</td>
+                    <td>${eventTitle}</td>
                     <td>${activityTitle}</td>
                     <td>${registration.tipo}</td>
-                    <td>${new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR')}</td>
                     <td class="actions">
                         <button class="action-btn view-btn" onclick="viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
                         <button class="action-btn edit-btn" onclick="editRegistration('${registration.idParticipacao}')"><i class="fas fa-edit"></i></button>
@@ -602,29 +631,58 @@ async function loadRegistrations() {
             });
         }
     }
+}
 
-    // Preenche os dropdowns de participante e atividade no modal de inscrição
+// Função para popular os dropdowns do modal de inscrição
+async function populateRegistrationDropdowns() {
     const registrationParticipantSelect = document.getElementById('registration-participant');
+    const registrationEventSelect = document.getElementById('registration-event');
     const registrationActivitySelect = document.getElementById('registration-activity');
 
-    if (registrationParticipantSelect) {
-        registrationParticipantSelect.innerHTML = '<option value="">Selecione...</option>';
-        if (participants && participants.length > 0) {
-            participants.forEach(participant => {
-                const option = document.createElement('option');
-                option.value = participant.idParticipante;
-                option.textContent = participant.nome;
-                registrationParticipantSelect.appendChild(option);
-            });
-        } else {
-            registrationParticipantSelect.innerHTML += '<option value="" disabled>Nenhum participante disponível</option>';
-        }
+    // Limpa e popula Participantes
+    registrationParticipantSelect.innerHTML = '<option value="">Selecione...</option>';
+    const participants = await fetchData(`${BASE_URL}/participante`);
+    if (participants && participants.length > 0) {
+        participants.forEach(participant => {
+            const option = document.createElement('option');
+            option.value = participant.idParticipante;
+            option.textContent = participant.nome;
+            registrationParticipantSelect.appendChild(option);
+        });
     } else {
-        console.error('Elemento registration-participant não encontrado no DOM.');
+        registrationParticipantSelect.innerHTML += '<option value="" disabled>Nenhum participante disponível</option>';
     }
 
-    if (registrationActivitySelect) {
-        registrationActivitySelect.innerHTML = '<option value="">Selecione...</option>';
+    // Limpa e popula Eventos
+    registrationEventSelect.innerHTML = '<option value="">Selecione...</option>';
+    const events = await fetchData(`${BASE_URL}/evento`);
+    if (events && events.length > 0) {
+        events.forEach(event => {
+            const option = document.createElement('option');
+            option.value = event.idEvento;
+            option.textContent = event.titulo;
+            registrationEventSelect.appendChild(option);
+        });
+    } else {
+        registrationEventSelect.innerHTML += '<option value="" disabled>Nenhum evento disponível</option>';
+    }
+
+    // Inicializa o dropdown de Atividades como desabilitado
+    registrationActivitySelect.innerHTML = '<option value="">Selecione um evento primeiro...</option>';
+    registrationActivitySelect.disabled = true;
+}
+
+// Event listener para o dropdown de Eventos no modal de Inscrição
+document.getElementById('registration-event').addEventListener('change', async function () {
+    const selectedEventId = this.value;
+    const registrationActivitySelect = document.getElementById('registration-activity');
+
+    registrationActivitySelect.innerHTML = '<option value="">Selecione...</option>';
+    registrationActivitySelect.disabled = true; // Desabilita enquanto carrega
+
+    if (selectedEventId) {
+        // Busca atividades relacionadas ao evento selecionado
+        const activities = await fetchData(`${BASE_URL}/atividade/evento/${selectedEventId}`); // Assumindo este endpoint
         if (activities && activities.length > 0) {
             activities.forEach(activity => {
                 const option = document.createElement('option');
@@ -632,13 +690,15 @@ async function loadRegistrations() {
                 option.textContent = activity.titulo;
                 registrationActivitySelect.appendChild(option);
             });
+            registrationActivitySelect.disabled = false; // Habilita se houver atividades
         } else {
-            registrationActivitySelect.innerHTML += '<option value="" disabled>Nenhuma atividade disponível</option>';
+            registrationActivitySelect.innerHTML += '<option value="" disabled>Nenhuma atividade para este evento</option>';
         }
     } else {
-        console.error('Elemento registration-activity não encontrado no DOM.');
+        registrationActivitySelect.innerHTML = '<option value="">Selecione um evento primeiro...</option>';
     }
-}
+});
+
 
 async function saveRegistration(e) {
     e.preventDefault();
@@ -679,12 +739,14 @@ async function viewRegistration(id) {
     if (registration) {
         const participant = await fetchData(`${BASE_URL}/participante/${registration.fk_idParticipante}`);
         const activity = await fetchData(`${BASE_URL}/atividade/${registration.fk_idAtividade}`);
+        const event = activity ? await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`) : null;
 
         let details = `
             Participante: ${participant ? participant.nome : 'N/A'}
+            Evento: ${event ? event.titulo : 'N/A'}
             Atividade: ${activity ? activity.titulo : 'N/A'}
             Tipo de Participação: ${registration.tipo}
-            Data de Registro: ${new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR')}
+            Data de Registro: ${registration.dataHoraRegistro ? new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR') : 'N/A'}
         `;
         showCustomMessage('Detalhes da Inscrição', details);
     }
