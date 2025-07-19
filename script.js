@@ -53,7 +53,7 @@ function openModal(type, data = null) {
             document.getElementById('event-end').value = data.dataHoraFim ? new Date(data.dataHoraFim).toISOString().slice(0, 16) : '';
             // Dispara o evento de mudança para mostrar/esconder o campo de taxa
             document.getElementById('event-type').dispatchEvent(new Event('change'));
-            document.getElementById('form-event').dataset.id = data.idEvento; // ATENÇÃO AQUI: data.idEvento
+            document.getElementById('form-event').dataset.id = data.idEvento;
         } else if (type === 'activity') {
             document.getElementById('activity-type').value = data.tipo;
             document.getElementById('activity-title').value = data.titulo;
@@ -61,19 +61,19 @@ function openModal(type, data = null) {
             document.getElementById('activity-start').value = data.dataHoraInicio ? new Date(data.dataHoraInicio).toISOString().slice(0, 16) : '';
             document.getElementById('activity-end').value = data.dataHoraFim ? new Date(data.dataHoraFim).toISOString().slice(0, 16) : '';
             document.getElementById('activity-max').value = data.qntdMaximaOuvintes;
-            document.getElementById('form-activity').dataset.id = data.idAtividade; // ATENÇÃO AQUI: data.idAtividade
+            document.getElementById('form-activity').dataset.id = data.idAtividade;
         } else if (type === 'participant') {
             document.getElementById('participant-name').value = data.nome;
             document.getElementById('participant-cpf').value = data.cpf;
             document.getElementById('participant-phone').value = data.telefone;
             document.getElementById('participant-email').value = data.email;
             document.getElementById('participant-birth').value = data.dataDeNascimento ? new Date(data.dataDeNascimento).toISOString().split('T')[0] : '';
-            document.getElementById('form-participant').dataset.id = data.idParticipante; // ATENÇÃO AQUI: data.idParticipante
+            document.getElementById('form-participant').dataset.id = data.idParticipante;
         } else if (type === 'registration') {
             document.getElementById('registration-participant').value = data.fk_idParticipante;
             document.getElementById('registration-activity').value = data.fk_idAtividade;
             document.getElementById('registration-type').value = data.tipo;
-            document.getElementById('form-registration').dataset.id = data.idParticipacao; // ATENÇÃO AQUI: data.idParticipacao
+            document.getElementById('form-registration').dataset.id = data.idParticipacao;
         }
     } else {
         // Limpa o formulário para uma nova entrada
@@ -355,37 +355,44 @@ async function loadActivities() {
     if (activities) {
         if (activities.length === 0) {
             activitiesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma atividade cadastrada.</td></tr>';
-            return;
+        } else {
+            activities.forEach(activity => {
+                const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
+                const row = activitiesTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${activity.tipo}</td>
+                    <td>${activity.titulo}</td>
+                    <td>${eventTitle}</td>
+                    <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
+                    <td>${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}</td>
+                    <td>${activity.qntdMaximaOuvintes}</td>
+                    <td class="actions">
+                        <button class="action-btn view-btn" onclick="viewActivity('${activity.idAtividade}')"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn edit-btn" onclick="editActivity('${activity.idAtividade}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete-btn" onclick="deleteActivity('${activity.idAtividade}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+            });
         }
-        activities.forEach(activity => {
-            const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A'; // ATENÇÃO AQUI: e.idEvento
-            const row = activitiesTableBody.insertRow();
-            row.innerHTML = `
-                <td>${activity.tipo}</td>
-                <td>${activity.titulo}</td>
-                <td>${eventTitle}</td>
-                <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
-                <td>${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}</td>
-                <td>${activity.qntdMaximaOuvintes}</td>
-                <td class="actions">
-                    <button class="action-btn view-btn" onclick="viewActivity('${activity.idAtividade}')"><i class="fas fa-eye"></i></button>
-                    <button class="action-btn edit-btn" onclick="editActivity('${activity.idAtividade}')"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete-btn" onclick="deleteActivity('${activity.idAtividade}')"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-        });
     }
 
     // Preenche o dropdown de eventos no modal de atividade
     const activityEventSelect = document.getElementById('activity-event');
-    activityEventSelect.innerHTML = '<option value="">Selecione...</option>';
-    if (events) {
-        events.forEach(event => {
-            const option = document.createElement('option');
-            option.value = event.idEvento; // ATENÇÃO AQUI: event.idEvento
-            option.textContent = event.titulo;
-            activityEventSelect.appendChild(option);
-        });
+
+    if (activityEventSelect) {
+        activityEventSelect.innerHTML = '<option value="">Selecione...</option>';
+        if (events && events.length > 0) {
+            events.forEach(event => {
+                const option = document.createElement('option');
+                option.value = event.idEvento;
+                option.textContent = event.titulo;
+                activityEventSelect.appendChild(option);
+            });
+        } else {
+            activityEventSelect.innerHTML += '<option value="" disabled>Nenhum evento disponível</option>';
+        }
+    } else {
+        console.error('Elemento activity-event não encontrado no DOM.');
     }
 }
 
@@ -432,7 +439,7 @@ async function saveActivity(e) {
 async function viewActivity(id) {
     const activity = await fetchData(`${BASE_URL}/atividade/${id}`);
     if (activity) {
-        const event = await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`); // ATENÇÃO AQUI: activity.fk_idEvento
+        const event = await fetchData(`${BASE_URL}/evento/${activity.fk_idEvento}`);
         let details = `
             Tipo: ${activity.tipo}
             Título: ${activity.titulo}
@@ -576,47 +583,60 @@ async function loadRegistrations() {
     if (registrations) {
         if (registrations.length === 0) {
             registrationsTableBody.innerHTML = '<tr><td colspan="5">Nenhuma inscrição cadastrada.</td></tr>';
-            return;
+        } else {
+            registrations.forEach(registration => {
+                const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A';
+                const activityTitle = activities ? (activities.find(a => a.idAtividade === registration.fk_idAtividade)?.titulo || 'N/A') : 'N/A';
+                const row = registrationsTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${participantName}</td>
+                    <td>${activityTitle}</td>
+                    <td>${registration.tipo}</td>
+                    <td>${new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR')}</td>
+                    <td class="actions">
+                        <button class="action-btn view-btn" onclick="viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn edit-btn" onclick="editRegistration('${registration.idParticipacao}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete-btn" onclick="deleteRegistration('${registration.idParticipacao}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+            });
         }
-        registrations.forEach(registration => {
-            const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A'; // ATENÇÃO AQUI: p.idParticipante
-            const activityTitle = activities ? (activities.find(a => a.idAtividade === registration.fk_idAtividade)?.titulo || 'N/A') : 'N/A'; // ATENÇÃO AQUI: a.idAtividade
-            const row = registrationsTableBody.insertRow();
-            row.innerHTML = `
-                <td>${participantName}</td>
-                <td>${activityTitle}</td>
-                <td>${registration.tipo}</td>
-                <td>${new Date(registration.dataHoraRegistro).toLocaleDateString('pt-BR')}</td>
-                <td class="actions">
-                    <button class="action-btn view-btn" onclick="viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
-                    <button class="action-btn edit-btn" onclick="editRegistration('${registration.idParticipacao}')"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete-btn" onclick="deleteRegistration('${registration.idParticipacao}')"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-        });
     }
 
     // Preenche os dropdowns de participante e atividade no modal de inscrição
     const registrationParticipantSelect = document.getElementById('registration-participant');
-    registrationParticipantSelect.innerHTML = '<option value="">Selecione...</option>';
-    if (participants) {
-        participants.forEach(participant => {
-            const option = document.createElement('option');
-            option.value = participant.idParticipante; // ATENÇÃO AQUI: participant.idParticipante
-            option.textContent = participant.nome;
-            registrationParticipantSelect.appendChild(option);
-        });
+    const registrationActivitySelect = document.getElementById('registration-activity');
+
+    if (registrationParticipantSelect) {
+        registrationParticipantSelect.innerHTML = '<option value="">Selecione...</option>';
+        if (participants && participants.length > 0) {
+            participants.forEach(participant => {
+                const option = document.createElement('option');
+                option.value = participant.idParticipante;
+                option.textContent = participant.nome;
+                registrationParticipantSelect.appendChild(option);
+            });
+        } else {
+            registrationParticipantSelect.innerHTML += '<option value="" disabled>Nenhum participante disponível</option>';
+        }
+    } else {
+        console.error('Elemento registration-participant não encontrado no DOM.');
     }
 
-    const registrationActivitySelect = document.getElementById('registration-activity');
-    registrationActivitySelect.innerHTML = '<option value="">Selecione...</option>';
-    if (activities) {
-        activities.forEach(activity => {
-            const option = document.createElement('option');
-            option.value = activity.idAtividade; // ATENÇÃO AQUI: activity.idAtividade
-            option.textContent = activity.titulo;
-            registrationActivitySelect.appendChild(option);
-        });
+    if (registrationActivitySelect) {
+        registrationActivitySelect.innerHTML = '<option value="">Selecione...</option>';
+        if (activities && activities.length > 0) {
+            activities.forEach(activity => {
+                const option = document.createElement('option');
+                option.value = activity.idAtividade;
+                option.textContent = activity.titulo;
+                registrationActivitySelect.appendChild(option);
+            });
+        } else {
+            registrationActivitySelect.innerHTML += '<option value="" disabled>Nenhuma atividade disponível</option>';
+        }
+    } else {
+        console.error('Elemento registration-activity não encontrado no DOM.');
     }
 }
 
