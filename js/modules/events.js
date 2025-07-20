@@ -194,7 +194,5 @@ export async function deleteEvent(id) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('event-search')?.addEventListener('input', loadEvents);
-    document.getElementById('event-year-filter')?.addEventListener('input', loadEvents);
     document.getElementById('form-event')?.addEventListener('submit', saveEvent);
 });

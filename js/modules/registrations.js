@@ -213,8 +213,6 @@ export async function deleteRegistration(id) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('registration-search')?.addEventListener('input', loadRegistrations);
-    document.getElementById('registration-birth-date-filter')?.addEventListener('input', loadRegistrations);
     document.getElementById('form-registration')?.addEventListener('submit', saveRegistration);
     document.getElementById('registration-event')?.addEventListener('change', updateActivitiesDropdown);
 });

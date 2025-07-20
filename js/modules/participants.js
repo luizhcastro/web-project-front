@@ -136,8 +136,6 @@ export async function deleteParticipant(id) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('participant-search')?.addEventListener('input', loadParticipants);
-    document.getElementById('participant-birth-year-filter')?.addEventListener('input', loadParticipants);
     document.getElementById('form-participant')?.addEventListener('submit', saveParticipant);
 });
 

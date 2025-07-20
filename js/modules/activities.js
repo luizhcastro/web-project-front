@@ -207,8 +207,6 @@ export async function deleteActivity(id) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('activity-search')?.addEventListener('input', loadActivities);
-    document.getElementById('activity-year-filter')?.addEventListener('input', loadActivities);
     document.getElementById('form-activity')?.addEventListener('submit', saveActivity);
 });
 
