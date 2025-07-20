@@ -48,12 +48,13 @@ function showTab(tabId) {
     const registrationBirthDateFilter = document.getElementById('registration-birth-date-filter');
     if (registrationBirthDateFilter) registrationBirthDateFilter.value = '';
 
+    const upcomingEventSearch = document.getElementById('upcoming-event-search');
+    if (upcomingEventSearch) upcomingEventSearch.value = '';
+    const upcomingEventYearFilter = document.getElementById('upcoming-event-year-filter');
+    if (upcomingEventYearFilter) upcomingEventYearFilter.value = '';
 
-    document.querySelectorAll('.search-input-wrapper').forEach(wrapper => {
-        wrapper.classList.remove('is-active');
-    });
 
-    // Chama as funções de carregamento para a aba selecionada
+    // Carrega os dados da aba ativa
     if (tabId === 'dashboard') {
         dashboard.loadDashboardData();
         dashboard.loadUpcomingEvents();
@@ -73,9 +74,9 @@ function showTab(tabId) {
     }
 }
 
-// Inicialização
+// Inicializa os event listeners para os campos de busca e filtro
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializa os inputs de pesquisa
+    // Inicializa a funcionalidade de busca para todos os campos com a classe 'filter-input'
     const initializeSearchInputs = () => {
         const searchInputs = document.querySelectorAll('.filter-input');
         searchInputs.forEach(input => {
@@ -97,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (tabId === 'activities') activities.loadActivities();
                 else if (tabId === 'participants') participants.loadParticipants();
                 else if (tabId === 'registrations') registrations.loadRegistrations();
+                else if (tabId === 'dashboard') dashboard.loadUpcomingEvents(); // Garante que a pesquisa do dashboard chame a função correta
             });
 
             input.addEventListener('focus', () => {
