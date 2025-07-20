@@ -35,8 +35,10 @@ function showTab(tabId) {
     } else if (tabId === 'registrations') {
         loadRegistrations();
         populateRegistrationDropdowns(); // Popula os dropdowns ao abrir o modal de inscrição
-    } else if (tabId === 'certificates') { // NOVA ABA
+    } else if (tabId === 'certificates') {
         loadCertificatesTab();
+    } else if (tabId === 'speakers') { // NOVA ABA
+        loadSpeakersTab();
     }
 }
 
@@ -148,7 +150,7 @@ function showCustomMessage(title, message, isConfirm = false) {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-message-modal');
         document.getElementById('custom-message-title').textContent = title;
-        // CORREÇÃO AQUI: Usar innerHTML e substituir \n por <br>
+        // Usar innerHTML e substituir \n por <br> para quebras de linha visíveis
         document.getElementById('custom-message-text').innerHTML = message.replace(/\n/g, '<br>');
 
         const okBtn = document.getElementById('custom-message-ok-btn');
@@ -374,6 +376,7 @@ async function viewEvent(id) {
             ? `R$ ${(ouvinteCount * (event.taxa || 0)).toFixed(2).replace('.', ',')}`
             : '-';
 
+        // Usando quebras de linha para formatar a saída
         let details = `
 Título: ${event.titulo}
 Edição: ${event.edicao}
@@ -951,6 +954,89 @@ document.getElementById('check-participation-btn').addEventListener('click', asy
         participationResultGroup.style.display = 'block';
     } else {
         showCustomMessage('Informação', 'Participação não encontrada para a combinação selecionada.');
+    }
+});
+
+// --- Funções para a aba de Palestrantes ---
+async function loadSpeakersTab() {
+    const speakersEventSelect = document.getElementById('speakers-event');
+    const speakersTableBody = document.getElementById('speakers-table-body');
+
+    // Limpar e popular dropdown de Eventos
+    speakersEventSelect.innerHTML = '<option value="">Selecione um evento...</option>';
+    const events = await fetchData(`${BASE_URL}/evento`);
+    if (events && events.length > 0) {
+        events.forEach(event => {
+            const option = document.createElement('option');
+            option.value = event.idEvento;
+            option.textContent = event.titulo;
+            speakersEventSelect.appendChild(option);
+        });
+    }
+
+    // Limpar a tabela de palestrantes
+    speakersTableBody.innerHTML = '<tr><td colspan="6">Selecione um evento para ver os palestrantes.</td></tr>';
+}
+
+// Event listener para o dropdown de Eventos na aba de Palestrantes
+document.getElementById('speakers-event').addEventListener('change', async function () {
+    const selectedEventId = this.value;
+    const speakersTableBody = document.getElementById('speakers-table-body');
+    speakersTableBody.innerHTML = ''; // Limpa a tabela
+
+    if (!selectedEventId) {
+        speakersTableBody.innerHTML = '<tr><td colspan="6">Selecione um evento para ver os palestrantes.</td></tr>';
+        return;
+    }
+
+    const allActivities = await fetchData(`${BASE_URL}/atividade`);
+    const allParticipants = await fetchData(`${BASE_URL}/participante`);
+    const allParticipations = await fetchData(`${BASE_URL}/participacao`);
+
+    if (!allActivities || !allParticipants || !allParticipations) {
+        speakersTableBody.innerHTML = '<tr><td colspan="6">Erro ao carregar dados.</td></tr>';
+        return;
+    }
+
+    // Filtrar atividades que pertencem ao evento selecionado
+    const eventActivities = allActivities.filter(activity => activity.fk_idEvento == selectedEventId);
+    const speakerData = [];
+
+    eventActivities.forEach(activity => {
+        // Encontrar participações que são de palestrantes e pertencem a esta atividade
+        const speakersInActivity = allParticipations.filter(p =>
+            p.fk_idAtividade == activity.idAtividade && p.tipo === 'palestrante'
+        );
+
+        speakersInActivity.forEach(speakerParticipation => {
+            const speaker = allParticipants.find(p => p.idParticipante === speakerParticipation.fk_idParticipante);
+            if (speaker) {
+                speakerData.push({
+                    activityTitle: activity.titulo,
+                    activityType: activity.tipo,
+                    activityDate: new Date(activity.dataHoraInicio).toLocaleDateString('pt-BR'),
+                    activityStartTime: new Date(activity.dataHoraInicio).toLocaleTimeString('pt-BR').substring(0, 5), // HH:MM
+                    speakerName: speaker.nome,
+                    speakerEmail: speaker.email
+                });
+            }
+        });
+    });
+
+    if (speakerData.length > 0) {
+        speakerData.forEach(data => {
+            const row = speakersTableBody.insertRow();
+            row.innerHTML = `
+                <td>${data.activityTitle}</td>
+                <td>${data.activityType}</td>
+                <td>${data.activityDate}</td>
+                <td>${data.activityStartTime}</td>
+                <td>${data.speakerName}</td>
+                <td>${data.speakerEmail}</td>
+            `;
+        });
+    } else {
+        speakersTableBody.innerHTML = '<tr><td colspan="6">Nenhum palestrante encontrado para o evento selecionado.</td></tr>';
     }
 });
 
