@@ -40,7 +40,6 @@
                                         <i class="fas fa-certificate"></i>
                                         <span>Certificados</span>
                               </div>
-                              <!-- NOVO ITEM DE MENU -->
                               <div class="menu-item" onclick="showTab('speakers')">
                                         <i class="fas fa-microphone"></i>
                                         <span>Palestrantes</span>
@@ -110,9 +109,19 @@
                               <div class="card">
                                         <div class="card-header">
                                                   <h3>Eventos</h3>
-                                                  <button class="btn btn-primary" onclick="openModal('event')">
-                                                            <i class="fas fa-plus"></i> Novo Evento
-                                                  </button>
+                                                  <div class="header-controls">
+                                                            <div class="search-input-wrapper">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="text" id="event-search" class="filter-input" placeholder="Pesquise por Título, Edição, Tipo...">
+                                                            </div>
+                                                            <div class="search-input-wrapper year-filter-wrapper">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="number" id="event-year-filter" class="filter-input year-filter-input" placeholder="Ano" min="1900" max="2100">
+                                                            </div>
+                                                            <button class="btn btn-primary" onclick="openModal('event')">
+                                                                      <i class="fas fa-plus"></i> Novo Evento
+                                                            </button>
+                                                  </div>
                                         </div>
                                         <table>
                                                   <thead>
@@ -138,9 +147,19 @@
                               <div class="card">
                                         <div class="card-header">
                                                   <h3>Atividades</h3>
-                                                  <button class="btn btn-primary" onclick="openModal('activity')">
-                                                            <i class="fas fa-plus"></i> Nova Atividade
-                                                  </button>
+                                                  <div class="header-controls">
+                                                            <div class="search-input-wrapper">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="text" id="activity-search" class="filter-input" placeholder="Pesquise por Título, Tipo, Evento...">
+                                                            </div>
+                                                            <div class="search-input-wrapper year-filter-wrapper">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="number" id="activity-year-filter" class="filter-input year-filter-input" placeholder="Ano" min="1900" max="2100">
+                                                            </div>
+                                                            <button class="btn btn-primary" onclick="openModal('activity')">
+                                                                      <i class="fas fa-plus"></i> Nova Atividade
+                                                            </button>
+                                                  </div>
                                         </div>
                                         <table>
                                                   <thead>
@@ -166,9 +185,19 @@
                               <div class="card">
                                         <div class="card-header">
                                                   <h3>Participantes</h3>
-                                                  <button class="btn btn-primary" onclick="openModal('participant')">
-                                                            <i class="fas fa-plus"></i> Novo Participante
-                                                  </button>
+                                                  <div class="header-controls">
+                                                            <div class="search-input-wrapper">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="text" id="participant-search" class="filter-input" placeholder="Pesquise por Nome, CPF, Email...">
+                                                            </div>
+                                                            <div class="search-input-wrapper year-filter-wrapper-lg">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="number" id="participant-birth-year-filter" class="filter-input year-filter-input" placeholder="Nascimento" min="1900" max="2100">
+                                                            </div>
+                                                            <button class="btn btn-primary" onclick="openModal('participant')">
+                                                                      <i class="fas fa-plus"></i> Novo Participante
+                                                            </button>
+                                                  </div>
                                         </div>
                                         <table>
                                                   <thead>
@@ -193,9 +222,19 @@
                               <div class="card">
                                         <div class="card-header">
                                                   <h3>Inscrições</h3>
-                                                  <button class="btn btn-primary" onclick="openModal('registration')">
-                                                            <i class="fas fa-plus"></i> Nova Inscrição
-                                                  </button>
+                                                  <div class="header-controls">
+                                                            <div class="search-input-wrapper">
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="text" id="registration-search" class="filter-input" placeholder="Pesquise por Participante, Evento, Atividade...">
+                                                            </div>
+                                                            <div class="search-input-wrapper year-filter-wrapper-lg"> <!-- ALTERADO PARA year-filter-wrapper-lg -->
+                                                                      <i class="fas fa-search search-icon"></i>
+                                                                      <input type="number" id="registration-birth-date-filter" class="filter-input year-filter-input" placeholder="Nascimento" min="1900" max="2100">
+                                                            </div>
+                                                            <button class="btn btn-primary" onclick="openModal('registration')">
+                                                                      <i class="fas fa-plus"></i> Nova Inscrição
+                                                            </button>
+                                                  </div>
                                         </div>
                                         <table>
                                                   <thead>
@@ -250,7 +289,7 @@
                               </div>
                     </div>
 
-                    <!-- NOVA ABA: Palestrantes -->
+                    <!-- Palestrantes Tab -->
                     <div id="speakers" class="tab-content">
                               <div class="card">
                                         <div class="card-header">

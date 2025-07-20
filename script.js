@@ -22,6 +22,21 @@ function showTab(tabId) {
         }
     }
 
+    // Limpa os campos de pesquisa ao trocar de aba
+    document.getElementById('event-search').value = '';
+    document.getElementById('event-year-filter').value = '';
+    document.getElementById('activity-search').value = '';
+    document.getElementById('activity-year-filter').value = '';
+    document.getElementById('participant-search').value = '';
+    document.getElementById('participant-birth-year-filter').value = '';
+    document.getElementById('registration-search').value = '';
+    document.getElementById('registration-birth-date-filter').value = '';
+
+    // Remove o highlight dos wrappers de pesquisa
+    document.querySelectorAll('.search-input-wrapper').forEach(wrapper => {
+        wrapper.classList.remove('is-active');
+    });
+
     // Chama as funções de carregamento para a aba selecionada
     if (tabId === 'dashboard') {
         loadDashboardData();
@@ -37,7 +52,7 @@ function showTab(tabId) {
         populateRegistrationDropdowns(); // Popula os dropdowns ao abrir o modal de inscrição
     } else if (tabId === 'certificates') {
         loadCertificatesTab();
-    } else if (tabId === 'speakers') { // NOVA ABA
+    } else if (tabId === 'speakers') {
         loadSpeakersTab();
     }
 }
@@ -255,14 +270,32 @@ async function loadUpcomingEvents() {
 }
 
 // --- Funções de Eventos ---
+let allEventsData = []; // Cache para todos os eventos
 async function loadEvents() {
     const eventsTableBody = document.getElementById('events-table-body');
+    const searchTerm = document.getElementById('event-search').value.toLowerCase();
+    const yearFilter = document.getElementById('event-year-filter').value;
     eventsTableBody.innerHTML = ''; // Limpa as linhas existentes
 
-    const events = await fetchData(`${BASE_URL}/evento`);
+    if (allEventsData.length === 0) { // Carrega os dados apenas uma vez
+        allEventsData = await fetchData(`${BASE_URL}/evento`);
+    }
 
-    if (events && events.length > 0) {
-        events.forEach(event => {
+    const filteredEvents = allEventsData.filter(event => {
+        const titleMatch = event.titulo.toLowerCase().includes(searchTerm);
+        const editionMatch = event.edicao.toLowerCase().includes(searchTerm);
+        const typeMatch = (event.tipo === 'pago' ? 'pago' : 'gratuito').includes(searchTerm);
+
+        let yearMatch = true;
+        if (yearFilter) {
+            const eventYear = new Date(event.dataHoraInicio).getFullYear().toString();
+            yearMatch = (eventYear === yearFilter);
+        }
+        return (titleMatch || editionMatch || typeMatch) && yearMatch;
+    });
+
+    if (filteredEvents && filteredEvents.length > 0) {
+        filteredEvents.forEach(event => {
             const row = eventsTableBody.insertRow();
             row.innerHTML = `
                 <td>${event.titulo}</td>
@@ -279,9 +312,12 @@ async function loadEvents() {
             `;
         });
     } else {
-        eventsTableBody.innerHTML = '<tr><td colspan="7">Nenhum evento cadastrado.</td></tr>';
+        eventsTableBody.innerHTML = '<tr><td colspan="7">Nenhum evento encontrado.</td></tr>';
     }
 }
+document.getElementById('event-search').addEventListener('input', loadEvents);
+document.getElementById('event-year-filter').addEventListener('input', loadEvents);
+
 
 async function saveEvent(e) {
     e.preventDefault();
@@ -324,6 +360,7 @@ async function saveEvent(e) {
 
     if (result) {
         closeModal('event');
+        allEventsData = []; // Limpa o cache para recarregar
         loadEvents();
         loadUpcomingEvents(); // Atualiza o dashboard após alterações no evento
         loadDashboardData();
@@ -411,6 +448,7 @@ async function deleteEvent(id) {
         const result = await fetchData(`${BASE_URL}/evento/${id}`, 'DELETE');
         if (result) {
             showCustomMessage('Sucesso', 'Evento excluído com sucesso!');
+            allEventsData = []; // Limpa o cache para recarregar
             loadEvents();
             loadUpcomingEvents(); // Atualiza o dashboard após alterações no evento
             loadDashboardData();
@@ -421,15 +459,34 @@ async function deleteEvent(id) {
 document.getElementById('form-event').addEventListener('submit', saveEvent);
 
 // --- Funções de Atividades ---
+let allActivitiesData = []; // Cache para todas as atividades
 async function loadActivities() {
     const activitiesTableBody = document.getElementById('activities-table-body');
+    const searchTerm = document.getElementById('activity-search').value.toLowerCase();
+    const yearFilter = document.getElementById('activity-year-filter').value;
     activitiesTableBody.innerHTML = ''; // Limpa as linhas existentes
 
-    const activities = await fetchData(`${BASE_URL}/atividade`);
+    if (allActivitiesData.length === 0) { // Carrega os dados apenas uma vez
+        allActivitiesData = await fetchData(`${BASE_URL}/atividade`);
+    }
     const events = await fetchData(`${BASE_URL}/evento`); // Para obter os títulos dos eventos
 
-    if (activities && activities.length > 0) {
-        activities.forEach(activity => {
+    const filteredActivities = allActivitiesData.filter(activity => {
+        const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || '') : '';
+        const titleMatch = activity.titulo.toLowerCase().includes(searchTerm);
+        const typeMatch = activity.tipo.toLowerCase().includes(searchTerm);
+        const eventMatch = eventTitle.toLowerCase().includes(searchTerm);
+
+        let yearMatch = true;
+        if (yearFilter) {
+            const activityYear = new Date(activity.dataHoraInicio).getFullYear().toString();
+            yearMatch = (activityYear === yearFilter);
+        }
+        return (titleMatch || typeMatch || eventMatch) && yearMatch;
+    });
+
+    if (filteredActivities && filteredActivities.length > 0) {
+        filteredActivities.forEach(activity => {
             const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
             const row = activitiesTableBody.insertRow();
             row.innerHTML = `
@@ -447,7 +504,7 @@ async function loadActivities() {
             `;
         });
     } else {
-        activitiesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma atividade cadastrada.</td></tr>';
+        activitiesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma atividade encontrada.</td></tr>';
     }
 
     // Preenche o dropdown de eventos no modal de atividade
@@ -469,6 +526,9 @@ async function loadActivities() {
         console.error('Elemento activity-event não encontrado no DOM.');
     }
 }
+document.getElementById('activity-search').addEventListener('input', loadActivities);
+document.getElementById('activity-year-filter').addEventListener('input', loadActivities);
+
 
 async function saveActivity(e) {
     e.preventDefault();
@@ -491,7 +551,6 @@ async function saveActivity(e) {
         fk_idEvento,
         dataHoraInicio: new Date(dataHoraInicio).toISOString(),
         dataHoraFim: new Date(dataHoraFim).toISOString(),
-        qntdMaximaOuvintes
     };
 
     let result;
@@ -505,6 +564,7 @@ async function saveActivity(e) {
 
     if (result) {
         closeModal('activity');
+        allActivitiesData = []; // Limpa o cache para recarregar
         loadActivities();
         loadDashboardData();
     }
@@ -540,6 +600,7 @@ async function deleteActivity(id) {
         const result = await fetchData(`${BASE_URL}/atividade/${id}`, 'DELETE');
         if (result) {
             showCustomMessage('Sucesso', 'Atividade excluída com sucesso!');
+            allActivitiesData = []; // Limpa o cache para recarregar
             loadActivities();
             loadDashboardData();
         }
@@ -549,14 +610,37 @@ async function deleteActivity(id) {
 document.getElementById('form-activity').addEventListener('submit', saveActivity);
 
 // --- Funções de Participantes ---
+let allParticipantsData = []; // Cache para todos os participantes
 async function loadParticipants() {
     const participantsTableBody = document.getElementById('participants-table-body');
+    const searchTerm = document.getElementById('participant-search').value.toLowerCase();
+    const birthYearFilter = document.getElementById('participant-birth-year-filter').value;
     participantsTableBody.innerHTML = ''; // Limpa as linhas existentes
 
-    const participants = await fetchData(`${BASE_URL}/participante`);
+    if (allParticipantsData.length === 0) { // Carrega os dados apenas uma vez
+        allParticipantsData = await fetchData(`${BASE_URL}/participante`);
+    }
 
-    if (participants && participants.length > 0) {
-        participants.forEach(participant => {
+    const filteredParticipants = allParticipantsData.filter(participant => {
+        const nameMatch = participant.nome.toLowerCase().includes(searchTerm);
+        const cpfMatch = participant.cpf.toLowerCase().includes(searchTerm);
+        const phoneMatch = participant.telefone.toLowerCase().includes(searchTerm);
+        const emailMatch = participant.email.toLowerCase().includes(searchTerm);
+
+        let yearMatch = true;
+        if (birthYearFilter) {
+            if (participant && participant.dataDeNascimento) {
+                const participantBirthYear = new Date(participant.dataDeNascimento).getFullYear().toString();
+                yearMatch = (participantBirthYear === birthYearFilter);
+            } else {
+                yearMatch = false; // Se não tem data de nascimento, não corresponde ao filtro de ano
+            }
+        }
+        return (nameMatch || cpfMatch || phoneMatch || emailMatch) && yearMatch;
+    });
+
+    if (filteredParticipants && filteredParticipants.length > 0) {
+        filteredParticipants.forEach(participant => {
             const row = participantsTableBody.insertRow();
             row.innerHTML = `
                 <td>${participant.nome}</td>
@@ -572,9 +656,12 @@ async function loadParticipants() {
             `;
         });
     } else {
-        participantsTableBody.innerHTML = '<tr><td colspan="6">Nenhum participante cadastrado.</td></tr>';
+        participantsTableBody.innerHTML = '<tr><td colspan="6">Nenhum participante encontrado.</td></tr>';
     }
 }
+document.getElementById('participant-search').addEventListener('input', loadParticipants);
+document.getElementById('participant-birth-year-filter').addEventListener('input', loadParticipants);
+
 
 async function saveParticipant(e) {
     e.preventDefault();
@@ -604,6 +691,7 @@ async function saveParticipant(e) {
 
     if (result) {
         closeModal('participant');
+        allParticipantsData = []; // Limpa o cache para recarregar
         loadParticipants();
         loadDashboardData();
     }
@@ -636,6 +724,7 @@ async function deleteParticipant(id) {
         const result = await fetchData(`${BASE_URL}/participante/${id}`, 'DELETE');
         if (result) {
             showCustomMessage('Sucesso', 'Participante excluído com sucesso!');
+            allParticipantsData = []; // Limpa o cache para recarregar
             loadParticipants();
             loadDashboardData();
         }
@@ -645,21 +734,57 @@ async function deleteParticipant(id) {
 document.getElementById('form-participant').addEventListener('submit', saveParticipant);
 
 // --- Funções de Inscrições ---
+let allRegistrationsData = []; // Cache para todas as inscrições
+let allRegistrationsParticipants = []; // Cache para participantes das inscrições
+let allRegistrationsActivities = []; // Cache para atividades das inscrições
+let allRegistrationsEvents = []; // Cache para eventos das inscrições
+
 async function loadRegistrations() {
     const registrationsTableBody = document.getElementById('registrations-table-body');
+    const searchTerm = document.getElementById('registration-search').value.toLowerCase();
+    const birthYearFilter = document.getElementById('registration-birth-date-filter').value; // Apenas o ano
     registrationsTableBody.innerHTML = ''; // Limpa as linhas existentes
 
-    const registrations = await fetchData(`${BASE_URL}/participacao`);
-    const participants = await fetchData(`${BASE_URL}/participante`);
-    const activities = await fetchData(`${BASE_URL}/atividade`);
-    const events = await fetchData(`${BASE_URL}/evento`); // Buscar todos os eventos
+    if (allRegistrationsData.length === 0) { // Carrega os dados apenas uma vez
+        allRegistrationsData = await fetchData(`${BASE_URL}/participacao`);
+        allRegistrationsParticipants = await fetchData(`${BASE_URL}/participante`);
+        allRegistrationsActivities = await fetchData(`${BASE_URL}/atividade`);
+        allRegistrationsEvents = await fetchData(`${BASE_URL}/evento`);
+    }
 
-    if (registrations && registrations.length > 0) {
-        registrations.forEach(registration => {
-            const participantName = participants ? (participants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A') : 'N/A';
-            const activity = activities ? activities.find(a => a.idAtividade === registration.fk_idAtividade) : null;
+    const filteredRegistrations = allRegistrationsData.filter(registration => {
+        const participant = allRegistrationsParticipants.find(p => p.idParticipante === registration.fk_idParticipante);
+        const activity = allRegistrationsActivities.find(a => a.idAtividade === registration.fk_idAtividade);
+        const event = activity ? allRegistrationsEvents.find(e => e.idEvento === activity.fk_idEvento) : null;
+
+        const participantName = participant ? participant.nome.toLowerCase() : '';
+        const activityTitle = activity ? activity.titulo.toLowerCase() : '';
+        const eventTitle = event ? event.titulo.toLowerCase() : '';
+        const registrationType = registration.tipo.toLowerCase();
+
+        const textMatch = participantName.includes(searchTerm) ||
+                          activityTitle.includes(searchTerm) ||
+                          eventTitle.includes(searchTerm) ||
+                          registrationType.includes(searchTerm);
+
+        let yearMatch = true;
+        if (birthYearFilter) {
+            if (participant && participant.dataDeNascimento) {
+                const participantBirthYear = new Date(participant.dataDeNascimento).getFullYear().toString();
+                yearMatch = (participantBirthYear === birthYearFilter);
+            } else {
+                yearMatch = false; // Se não tem data de nascimento, não corresponde ao filtro de ano
+            }
+        }
+        return textMatch && yearMatch;
+    });
+
+    if (filteredRegistrations && filteredRegistrations.length > 0) {
+        filteredRegistrations.forEach(registration => {
+            const participantName = allRegistrationsParticipants.find(p => p.idParticipante === registration.fk_idParticipante)?.nome || 'N/A';
+            const activity = allRegistrationsActivities.find(a => a.idAtividade === registration.fk_idAtividade);
             const activityTitle = activity ? activity.titulo : 'N/A';
-            const eventTitle = (activity && events) ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
+            const eventTitle = (activity && allRegistrationsEvents) ? (allRegistrationsEvents.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
 
             const row = registrationsTableBody.insertRow();
             row.innerHTML = `
@@ -675,9 +800,12 @@ async function loadRegistrations() {
             `;
         });
     } else {
-        registrationsTableBody.innerHTML = '<tr><td colspan="5">Nenhuma inscrição cadastrada.</td></tr>';
+        registrationsTableBody.innerHTML = '<tr><td colspan="5">Nenhuma inscrição encontrada.</td></tr>';
     }
 }
+document.getElementById('registration-search').addEventListener('input', loadRegistrations);
+document.getElementById('registration-birth-date-filter').addEventListener('input', loadRegistrations);
+
 
 // Função para popular os dropdowns do modal de inscrição
 async function populateRegistrationDropdowns() {
@@ -776,6 +904,7 @@ async function saveRegistration(e) {
 
     if (result) {
         closeModal('registration');
+        allRegistrationsData = []; // Limpa o cache para recarregar
         loadRegistrations();
     }
 }
@@ -811,6 +940,7 @@ async function deleteRegistration(id) {
         const result = await fetchData(`${BASE_URL}/participacao/${id}`, 'DELETE');
         if (result) {
             showCustomMessage('Sucesso', 'Inscrição excluída com sucesso!');
+            allRegistrationsData = []; // Limpa o cache para recarregar
             loadRegistrations();
         }
     }
@@ -1040,8 +1170,51 @@ document.getElementById('speakers-event').addEventListener('change', async funct
     }
 });
 
+// Função para inicializar os campos de pesquisa com o comportamento de highlight
+function initializeSearchInputs() {
+    const searchInputs = document.querySelectorAll('.filter-input');
+    searchInputs.forEach(input => {
+        const wrapper = input.closest('.search-input-wrapper');
+        if (!wrapper) return;
+
+        // Verifica o estado inicial do campo (se já tem valor)
+        if (input.value.length > 0) {
+            wrapper.classList.add('is-active');
+        }
+
+        // Adiciona listener para o evento 'input' (digitação)
+        input.addEventListener('input', () => {
+            if (input.value.length > 0) {
+                wrapper.classList.add('is-active');
+            } else {
+                wrapper.classList.remove('is-active');
+            }
+            // Chama a função de carregamento/filtro da tabela correspondente
+            const tabId = input.closest('.tab-content').id;
+            if (tabId === 'events') loadEvents();
+            else if (tabId === 'activities') loadActivities();
+            else if (tabId === 'participants') loadParticipants();
+            else if (tabId === 'registrations') loadRegistrations();
+        });
+
+        // Adiciona listener para o evento 'focus' (clicar no campo)
+        input.addEventListener('focus', () => {
+            wrapper.classList.add('is-active');
+        });
+
+        // Adiciona listener para o evento 'blur' (sair do campo)
+        input.addEventListener('blur', () => {
+            // Remove 'is-active' apenas se o campo estiver vazio ao perder o foco
+            if (input.value.length === 0) {
+                wrapper.classList.remove('is-active');
+            }
+        });
+    });
+}
+
 
 // Carregamento inicial
 document.addEventListener('DOMContentLoaded', () => {
     showTab('dashboard'); // Carrega o conteúdo do dashboard inicialmente
+    initializeSearchInputs(); // Inicializa o comportamento de highlight dos campos de pesquisa
 });
