@@ -1,4 +1,3 @@
-
 import { fetchData } from '../utils/api.js';
 import { viewEvent, editEvent, deleteEvent } from './events.js';
 
@@ -7,10 +6,12 @@ export async function loadDashboardData() {
     const events = await fetchData(`http://localhost:3000/evento`);
     const activities = await fetchData(`http://localhost:3000/atividade`);
     const participants = await fetchData(`http://localhost:3000/participante`);
+    const registrations = await fetchData(`http://localhost:3000/participacao`); // Fetch registrations
 
     document.getElementById('dashboard-active-events').textContent = events ? events.length : 0;
     document.getElementById('dashboard-activities').textContent = activities ? activities.length : 0;
     document.getElementById('dashboard-participants').textContent = participants ? participants.length : 0;
+    document.getElementById('dashboard-registrations').textContent = registrations ? registrations.length : 0; // Display registrations count
 }
 
 // Carrega e exibe os próximos eventos na tabela do dashboard.

@@ -1,4 +1,4 @@
-
+// participants.js
 import { fetchData } from '../utils/api.js';
 import { showCustomMessage, closeModal, openModal } from '../utils/ui.js';
 
@@ -44,8 +44,8 @@ export async function loadParticipants() {
 
             row.innerHTML = `
                 <td>${participant.nome}</td>
-                <td>${participant.cpf}</td>
-                <td>${participant.telefone}</td>
+                <td>${formatCPF(participant.cpf)}</td>
+                <td>${formatPhone(participant.telefone)}</td>
                 <td>${participant.email}</td>
                 <td>${formattedBirthDate}</td>
                 <td class="actions">
@@ -70,12 +70,26 @@ export async function saveParticipant(e) {
     const email = document.getElementById('participant-email').value;
     const dataDeNascimento = document.getElementById('participant-birth').value;
 
+    // Validate CPF length (only digits)
+    const rawCpf = cpf.replace(/\D/g, '');
+    if (rawCpf.length !== 11) {
+        showCustomMessage('Erro de Validação', 'O CPF deve conter exatamente 11 dígitos.');
+        return;
+    }
+
+    // Validate phone length (only digits) - Adjusted to strictly require 11 digits
+    const rawTelefone = telefone.replace(/\D/g, '');
+    if (rawTelefone.length !== 11) { // Changed from < 10 || > 11 to !== 11
+        showCustomMessage('Erro de Validação', 'O telefone deve conter exatamente 11 dígitos (DDD + 9 dígitos).');
+        return;
+    }
+
     const participantData = {
         nome,
-        cpf,
-        telefone,
+        cpf: rawCpf, // Send only digits to the backend
+        telefone: rawTelefone, // Send only digits to the backend
         email,
-        dataDeNascimento: new Date(dataDeNascimento).toISOString().split('T')[0],
+        dataDeNascimento: new Date(dataDeNascimento).toISOString(),
     };
 
     let result;
@@ -117,7 +131,12 @@ Nascimento: ${formattedBirthDate}
 export async function editParticipant(id) {
     const participant = await fetchData(`http://localhost:3000/participante/${id}`);
     if (participant) {
-        openModal('participant', participant);
+        // Prepare data for modal, apply formatting for display
+        const displayParticipant = { ...participant };
+        displayParticipant.cpf = formatCPF(participant.cpf);
+        displayParticipant.telefone = formatPhone(participant.telefone);
+
+        openModal('participant', displayParticipant);
     }
 }
 
@@ -134,9 +153,63 @@ export async function deleteParticipant(id) {
     }
 }
 
+// Funções de formatação de input
+function formatCPF(value) {
+    // Remove tudo que não for dígito
+    value = value.replace(/\D/g, '');
+    // Limita a 11 dígitos para formatação
+    value = value.substring(0, 11);
+    // Aplica a máscara: 111.111.111-11
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    return value;
+}
+
+function formatPhone(value) {
+    // Remove tudo que não for dígito
+    value = value.replace(/\D/g, '');
+    // Limita a 11 dígitos para o número de telefone (DDD + 9 dígitos)
+    value = value.substring(0, 11);
+
+    // Aplica a máscara: (11) 91111-1111 (para 11 dígitos)
+    if (value.length === 11) {
+        value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    }
+    // Aplica a máscara: (11) 1111-1111 (para 10 dígitos, embora a validação agora exija 11 para salvar)
+    else if (value.length === 10) {
+        value = value.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+    }
+    // Formatação parcial enquanto o usuário digita
+    else if (value.length > 6) {
+        value = value.replace(/^(\d{2})(\d{5})(\d{0,4})$/, '($1) $2-$3');
+    }
+    else if (value.length > 2) {
+        value = value.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+    } else {
+        value = value.replace(/^(\d*)/, '($1');
+    }
+    return value;
+}
+
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-participant')?.addEventListener('submit', saveParticipant);
+
+    const participantCpfInput = document.getElementById('participant-cpf');
+    if (participantCpfInput) {
+        participantCpfInput.addEventListener('input', (e) => {
+            e.target.value = formatCPF(e.target.value);
+        });
+    }
+
+    const participantPhoneInput = document.getElementById('participant-phone');
+    if (participantPhoneInput) {
+        participantPhoneInput.addEventListener('input', (e) => {
+            e.target.value = formatPhone(e.target.value);
+        });
+    }
 });
 
 // Exporta as funções para serem acessíveis globalmente
