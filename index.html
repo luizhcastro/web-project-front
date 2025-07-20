@@ -10,7 +10,6 @@
 </head>
 
 <body>
-          <!-- Sidebar -->
           <div class="sidebar">
                     <div class="sidebar-header">
                               <h2><i class="fas fa-calendar-alt"></i> Eventos</h2>
@@ -47,7 +46,6 @@
                     </div>
           </div>
 
-          <!-- Main Content -->
           <div class="main-content">
                     <div class="header">
                               <h1>Dashboard</h1>
@@ -57,7 +55,6 @@
                               </div>
                     </div>
 
-                    <!-- Dashboard Tab -->
                     <div id="dashboard" class="tab-content active">
                               <div class="card">
                                         <div class="card-header">
@@ -98,13 +95,11 @@
                                                             </tr>
                                                   </thead>
                                                   <tbody id="upcoming-events-table-body">
-                                                            <!-- Dados serão carregados via JS -->
-                                                  </tbody>
+                                                            </tbody>
                                         </table>
                               </div>
                     </div>
 
-                    <!-- Events Tab -->
                     <div id="events" class="tab-content">
                               <div class="card">
                                         <div class="card-header">
@@ -136,13 +131,11 @@
                                                             </tr>
                                                   </thead>
                                                   <tbody id="events-table-body">
-                                                            <!-- Dados serão carregados via JS -->
-                                                  </tbody>
+                                                            </tbody>
                                         </table>
                               </div>
                     </div>
 
-                    <!-- Activities Tab -->
                     <div id="activities" class="tab-content">
                               <div class="card">
                                         <div class="card-header">
@@ -170,17 +163,15 @@
                                                                       <th>Data Início</th>
                                                                       <th>Data Fim</th>
                                                                       <th>Vagas</th>
-                                                                      <th>Ações</th>
+                                                                      <th>Vagas Livres</th> <th>Ações</th>
                                                             </tr>
                                                   </thead>
                                                   <tbody id="activities-table-body">
-                                                            <!-- Dados serão carregados via JS -->
-                                                  </tbody>
+                                                            </tbody>
                                         </table>
                               </div>
                     </div>
 
-                    <!-- Participants Tab -->
                     <div id="participants" class="tab-content">
                               <div class="card">
                                         <div class="card-header">
@@ -211,13 +202,11 @@
                                                             </tr>
                                                   </thead>
                                                   <tbody id="participants-table-body">
-                                                            <!-- Dados serão carregados via JS -->
-                                                  </tbody>
+                                                            </tbody>
                                         </table>
                               </div>
                     </div>
 
-                    <!-- Registrations Tab -->
                     <div id="registrations" class="tab-content">
                               <div class="card">
                                         <div class="card-header">
@@ -227,7 +216,7 @@
                                                                       <i class="fas fa-search search-icon"></i>
                                                                       <input type="text" id="registration-search" class="filter-input" placeholder="Pesquise por Participante, Evento, Atividade...">
                                                             </div>
-                                                            <div class="search-input-wrapper year-filter-wrapper-lg"> <!-- ALTERADO PARA year-filter-wrapper-lg -->
+                                                            <div class="search-input-wrapper year-filter-wrapper-lg">
                                                                       <i class="fas fa-search search-icon"></i>
                                                                       <input type="number" id="registration-birth-date-filter" class="filter-input year-filter-input" placeholder="Nascimento" min="1900" max="2100">
                                                             </div>
@@ -247,13 +236,11 @@
                                                             </tr>
                                                   </thead>
                                                   <tbody id="registrations-table-body">
-                                                            <!-- Dados serão carregados via JS -->
-                                                  </tbody>
+                                                            </tbody>
                                         </table>
                               </div>
                     </div>
 
-                    <!-- Certificados Tab -->
                     <div id="certificates" class="tab-content">
                               <div class="card">
                                         <div class="card-header">
@@ -283,13 +270,12 @@
                                                   </button>
                                         </div>
                                         <div class="form-group" id="participation-result-group" style="display: none;">
-                                                  <label>Tipo de Envolvimento:</label>
+                                                  <label>Tipo de Participação:</label>
                                                   <p id="participation-type-display" class="result-display"></p>
                                         </div>
                               </div>
                     </div>
 
-                    <!-- Palestrantes Tab -->
                     <div id="speakers" class="tab-content">
                               <div class="card">
                                         <div class="card-header">
@@ -313,7 +299,6 @@
                                                             </tr>
                                                   </thead>
                                                   <tbody id="speakers-table-body">
-                                                            <!-- Dados serão carregados via JS -->
                                                             <tr><td colspan="6">Selecione um evento para ver os palestrantes.</td></tr>
                                                   </tbody>
                                         </table>
@@ -321,11 +306,10 @@
                     </div>
           </div>
 
-          <!-- Event Modal -->
           <div id="event-modal" class="modal">
                     <div class="modal-content">
                               <div class="modal-header">
-                                        <h3>Novo Evento</h3>
+                                        <h3 id="event-modal-title">Novo Evento</h3>
                                         <button class="close-btn" onclick="closeModal('event')">&times;</button>
                               </div>
                               <form id="form-event">
@@ -357,7 +341,7 @@
                                                             <input type="datetime-local" id="event-start" required>
                                                   </div>
                                                   <div class="form-group">
-                                                            <label for="event-end">Data e Hora de Término</label>
+                                                            <label for="event-end">Data e Hora de Fim</label>
                                                             <input type="datetime-local" id="event-end" required>
                                                   </div>
                                         </div>
@@ -370,11 +354,10 @@
                     </div>
           </div>
 
-          <!-- Activity Modal -->
           <div id="activity-modal" class="modal">
                     <div class="modal-content">
                               <div class="modal-header">
-                                        <h3>Nova Atividade</h3>
+                                        <h3 id="activity-modal-title">Nova Atividade</h3>
                                         <button class="close-btn" onclick="closeModal('activity')">&times;</button>
                               </div>
                               <form id="form-activity">
@@ -385,6 +368,8 @@
                                                             <option value="palestra">Palestra</option>
                                                             <option value="minicurso">Minicurso</option>
                                                             <option value="mesa-redonda">Mesa Redonda</option>
+                                                            <option value="workshop">Workshop</option>
+                                                            <option value="apresentacao">Apresentação</option>
                                                   </select>
                                         </div>
                                         <div class="form-group">
@@ -395,7 +380,6 @@
                                                   <label for="activity-event">Evento</label>
                                                   <select id="activity-event" required>
                                                             <option value="">Selecione...</option>
-                                                            <!-- Options loaded via JS -->
                                                   </select>
                                         </div>
                                         <div class="form-row">
@@ -404,13 +388,13 @@
                                                             <input type="datetime-local" id="activity-start" required>
                                                   </div>
                                                   <div class="form-group">
-                                                            <label for="activity-end">Data e Hora de Término</label>
+                                                            <label for="activity-end">Data e Hora de Fim</label>
                                                             <input type="datetime-local" id="activity-end" required>
                                                   </div>
                                         </div>
                                         <div class="form-group">
                                                   <label for="activity-max">Quantidade Máxima de Ouvintes</label>
-                                                  <input type="number" id="activity-max" min="1" required>
+                                                  <input type="number" id="activity-max" min="0" required>
                                         </div>
                                         <div class="form-group">
                                                   <button type="submit" class="btn btn-primary">Salvar</button>
@@ -421,11 +405,10 @@
                     </div>
           </div>
 
-          <!-- Participant Modal -->
           <div id="participant-modal" class="modal">
                     <div class="modal-content">
                               <div class="modal-header">
-                                        <h3>Novo Participante</h3>
+                                        <h3 id="participant-modal-title">Novo Participante</h3>
                                         <button class="close-btn" onclick="closeModal('participant')">&times;</button>
                               </div>
                               <form id="form-participant">
@@ -433,17 +416,15 @@
                                                   <label for="participant-name">Nome Completo</label>
                                                   <input type="text" id="participant-name" required>
                                         </div>
-                                        <div class="form-row">
-                                                  <div class="form-group">
-                                                            <label for="participant-cpf">CPF</label>
-                                                            <input type="text" id="participant-cpf"
-                                                                      placeholder="000.000.000-00" required>
-                                                  </div>
-                                                  <div class="form-group">
-                                                            <label for="participant-phone">Telefone</label>
-                                                            <input type="tel" id="participant-phone"
-                                                                      placeholder="(00) 00000-0000" required>
-                                                  </div>
+                                        <div class="form-group">
+                                                  <label for="participant-cpf">CPF</label>
+                                                  <input type="text" id="participant-cpf" pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                                                            placeholder="Ex: 123.456.789-00" required>
+                                        </div>
+                                        <div class="form-group">
+                                                  <label for="participant-phone">Telefone</label>
+                                                  <input type="text" id="participant-phone" pattern="\(\d{2}\)\s\d{4,5}-\d{4}"
+                                                            placeholder="Ex: (77) 98888-7777" required>
                                         </div>
                                         <div class="form-group">
                                                   <label for="participant-email">Email</label>
@@ -462,33 +443,29 @@
                     </div>
           </div>
 
-          <!-- Registration Modal -->
           <div id="registration-modal" class="modal">
                     <div class="modal-content">
                               <div class="modal-header">
-                                        <h3>Nova Inscrição</h3>
+                                        <h3 id="registration-modal-title">Nova Inscrição</h3>
                                         <button class="close-btn" onclick="closeModal('registration')">&times;</button>
                               </div>
                               <form id="form-registration">
                                         <div class="form-group">
-                                                  <label for="registration-event">Evento</label>
-                                                  <select id="registration-event" required>
-                                                            <option value="">Selecione...</option>
-                                                            <!-- Options loaded via JS -->
+                                                  <label for="registration-participant">Participante</label>
+                                                  <select id="registration-participant" required>
+                                                            <option value="">Selecione um participante...</option>
                                                   </select>
                                         </div>
                                         <div class="form-group">
-                                                  <label for="registration-participant">Participante</label>
-                                                  <select id="registration-participant" required>
-                                                            <option value="">Selecione...</option>
-                                                            <!-- Options loaded via JS -->
+                                                  <label for="registration-event">Evento</label>
+                                                  <select id="registration-event" required>
+                                                            <option value="">Selecione um evento...</option>
                                                   </select>
                                         </div>
                                         <div class="form-group">
                                                   <label for="registration-activity">Atividade</label>
                                                   <select id="registration-activity" required disabled>
                                                             <option value="">Selecione um evento primeiro...</option>
-                                                            <!-- Options loaded via JS based on selected event -->
                                                   </select>
                                         </div>
                                         <div class="form-group">
@@ -511,7 +488,6 @@
                     </div>
           </div>
 
-          <!-- Custom Message Modal -->
           <div id="custom-message-modal" class="modal">
               <div class="modal-content">
                   <div class="modal-header">
@@ -528,7 +504,7 @@
               </div>
           </div>
 
-          <script src="script.js"></script>
+          <script type="module" src="js/main.js"></script>
 </body>
 
 </html>
