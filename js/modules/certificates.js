@@ -30,7 +30,7 @@ export async function loadCertificatesTab() {
         events.forEach(event => {
             const option = document.createElement('option');
             option.value = event.idEvento;
-            option.textContent = event.titulo;
+            option.textContent = `${event.titulo} (${event.edicao})`;
             certificateEventSelect.appendChild(option);
         });
     } else {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     filteredActivities.forEach(activity => {
                         const option = document.createElement('option');
                         option.value = activity.idAtividade;
-                        option.textContent = activity.titulo;
+                        option.textContent = `${activity.titulo} (${activity.tipo})`;
                         certificateActivitySelect.appendChild(option);
                     });
                     certificateActivitySelect.disabled = false;

@@ -69,7 +69,7 @@ export async function loadActivities() {
             events.forEach(event => {
                 const option = document.createElement('option');
                 option.value = event.idEvento;
-                option.textContent = event.titulo;
+                option.textContent = `${event.titulo} (${event.edicao})`;
                 activityEventSelect.appendChild(option);
             });
         } else {
@@ -81,6 +81,7 @@ export async function loadActivities() {
 // Salva uma nova atividade ou atualiza uma existente.
 export async function saveActivity(e) {
     e.preventDefault();
+
     const id = e.target.dataset.id;
     const tipo = document.getElementById('activity-type').value;
     const titulo = document.getElementById('activity-title').value;
@@ -94,12 +95,20 @@ export async function saveActivity(e) {
         return;
     }
 
+    // Validação: data/hora fim não pode ser menor que início
+    const inicioDate = new Date(dataHoraInicio);
+    const fimDate = new Date(dataHoraFim);
+    if (fimDate < inicioDate) {
+        showCustomMessage('Erro', 'A data/hora de fim não pode ser menor que a data/hora de início.');
+        return;
+    }
+
     const activityData = {
         tipo,
         titulo,
         fk_idEvento,
-        dataHoraInicio: new Date(dataHoraInicio).toISOString(),
-        dataHoraFim: new Date(dataHoraFim).toISOString(),
+        dataHoraInicio: inicioDate.toISOString(),
+        dataHoraFim: fimDate.toISOString(),
         qntdMaximaOuvintes: qntdMaximaOuvintes,
     };
 

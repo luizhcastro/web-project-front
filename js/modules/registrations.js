@@ -22,7 +22,7 @@ export async function populateRegistrationDropdowns() {
         events.forEach(event => {
             const option = document.createElement('option');
             option.value = event.idEvento;
-            option.textContent = event.titulo;
+            option.textContent = `${event.titulo} (${event.edicao})`;
             registrationEventSelect.appendChild(option);
         });
     } else {

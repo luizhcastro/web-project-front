@@ -56,6 +56,7 @@ export async function loadEvents() {
 // Salva um novo evento ou atualiza um existente.
 export async function saveEvent(e) {
     e.preventDefault();
+
     const id = e.target.dataset.id;
     const titulo = document.getElementById('event-title').value;
     const edicao = document.getElementById('event-edition').value;
@@ -63,6 +64,14 @@ export async function saveEvent(e) {
     const dataHoraInicio = document.getElementById('event-start').value;
     const dataHoraFim = document.getElementById('event-end').value;
     let taxa = null;
+
+    // Validação: data/hora fim não pode ser menor que início
+    const inicioDate = new Date(dataHoraInicio);
+    const fimDate = new Date(dataHoraFim);
+    if (fimDate < inicioDate) {
+        showCustomMessage('Erro', 'A data/hora de fim não pode ser menor que a data/hora de início.');
+        return;
+    }
 
     if (tipo === 'pago') {
         taxa = parseFloat(document.getElementById('event-fee').value);
@@ -76,8 +85,8 @@ export async function saveEvent(e) {
         titulo,
         edicao,
         tipo,
-        dataHoraInicio: new Date(dataHoraInicio).toISOString(),
-        dataHoraFim: new Date(dataHoraFim).toISOString(),
+        dataHoraInicio: inicioDate.toISOString(),
+        dataHoraFim: fimDate.toISOString(),
     };
 
     if (tipo === 'pago') {

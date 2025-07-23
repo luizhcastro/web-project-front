@@ -12,7 +12,7 @@ export async function loadSpeakersTab() {
         events.forEach(event => {
             const option = document.createElement('option');
             option.value = event.idEvento;
-            option.textContent = event.titulo;
+            option.textContent = `${event.titulo} (${event.edicao})`;
             speakersEventSelect.appendChild(option);
         });
     } else {
