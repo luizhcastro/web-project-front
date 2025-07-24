@@ -1,4 +1,4 @@
-
+// activities.js
 import { fetchData } from '../utils/api.js';
 import { showCustomMessage, closeModal, openModal } from '../utils/ui.js';
 import { loadDashboardData } from './dashboard.js';
@@ -15,17 +15,20 @@ export async function loadActivities() {
     const yearFilter = document.getElementById('activity-year-filter')?.value || '';
     activitiesTableBody.innerHTML = '';
 
+    // Garante que os dados de atividades e eventos sejam carregados
     if (allActivitiesData.length === 0) {
         allActivitiesData = await fetchData(`http://localhost:3000/atividade`);
     }
     allParticipationsDataForActivities = await fetchData(`http://localhost:3000/participacao`);
-    const events = await fetchData(`http://localhost:3000/evento`);
+    const events = await fetchData(`http://localhost:3000/evento`); // Garante que os eventos são carregados
 
     const filteredActivities = allActivitiesData.filter(activity => {
-        const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || '') : '';
+        const event = events ? events.find(e => e.idEvento === activity.fk_idEvento) : null;
+        const eventTitleWithEdition = event ? `${event.titulo} (${event.edicao})`.toLowerCase() : ''; // Pega o título com edição
+        
         const titleMatch = activity.titulo.toLowerCase().includes(searchTerm);
         const typeMatch = activity.tipo.toLowerCase().includes(searchTerm);
-        const eventMatch = eventTitle.toLowerCase().includes(searchTerm);
+        const eventMatch = eventTitleWithEdition.includes(searchTerm); // Inclui a edição na pesquisa do evento
 
         let yearMatch = true;
         if (yearFilter) {
@@ -37,8 +40,9 @@ export async function loadActivities() {
 
     if (filteredActivities && filteredActivities.length > 0) {
         filteredActivities.forEach(activity => {
-            const eventTitle = events ? (events.find(e => e.idEvento === activity.fk_idEvento)?.titulo || 'N/A') : 'N/A';
-
+            const event = events ? events.find(e => e.idEvento === activity.fk_idEvento) : null;
+            const eventDisplay = event ? `${event.titulo} (${event.edicao})` : 'N/A'; // Formata para exibição
+            
             const currentOuvintesCount = allParticipationsDataForActivities.filter(p => p.fk_idAtividade === activity.idAtividade && p.tipo === 'ouvinte').length;
             const vagasLivres = activity.qntdMaximaOuvintes - currentOuvintesCount;
 
@@ -46,8 +50,7 @@ export async function loadActivities() {
             row.innerHTML = `
                 <td>${activity.tipo}</td>
                 <td>${activity.titulo}</td>
-                <td>${eventTitle}</td>
-                <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
+                <td>${eventDisplay}</td> <td>${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}</td>
                 <td>${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}</td>
                 <td>${activity.qntdMaximaOuvintes}</td>
                 <td>${vagasLivres}</td>
@@ -62,6 +65,7 @@ export async function loadActivities() {
         activitiesTableBody.innerHTML = '<tr><td colspan="8">Nenhuma atividade encontrada.</td></tr>';
     }
 
+    // Lógica para popular o dropdown de eventos no modal (já estava correto)
     const activityEventSelect = document.getElementById('activity-event');
     if (activityEventSelect) {
         activityEventSelect.innerHTML = '<option value="">Selecione...</option>';
@@ -123,8 +127,8 @@ export async function saveActivity(e) {
 
     if (result) {
         closeModal('activity');
-        allActivitiesData = [];
-        allParticipationsDataForActivities = [];
+        allActivitiesData = []; // Limpa cache para recarregar
+        allParticipationsDataForActivities = []; // Limpa cache para recarregar
         loadActivities();
         loadDashboardData();
     }
@@ -173,8 +177,7 @@ export async function viewActivity(id) {
         let details = `
 Tipo: ${activity.tipo}
 Título: ${activity.titulo}
-Evento: ${event ? event.titulo : 'N/A'}
-Data Início: ${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}
+Evento: ${event ? `${event.titulo} (${event.edicao})` : 'N/A'} Data Início: ${new Date(activity.dataHoraInicio).toLocaleString('pt-BR')}
 Data Fim: ${new Date(activity.dataHoraFim).toLocaleString('pt-BR')}
 Vagas Máximas: ${activity.qntdMaximaOuvintes}
 Vagas Livres: ${vagasLivres}
@@ -185,7 +188,8 @@ Mediadores: ${mediadorCount}
 Monitores: ${monitorCount}
 Ouvintes: ${ouvinteCount}
 
-Total de Participantes: ${totalParticipants}
+Total de Participações: ${totalParticipants}
+
         `;
         showCustomMessage('Detalhes da Atividade', details);
     }
@@ -206,8 +210,8 @@ export async function deleteActivity(id) {
         const result = await fetchData(`http://localhost:3000/atividade/${id}`, 'DELETE');
         if (result) {
             showCustomMessage('Sucesso', 'Atividade excluída com sucesso!');
-            allActivitiesData = [];
-            allParticipationsDataForActivities = [];
+            allActivitiesData = []; // Limpa cache para recarregar
+            allParticipationsDataForActivities = []; // Limpa cache para recarregar
             loadActivities();
             loadDashboardData();
         }

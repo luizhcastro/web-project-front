@@ -1,4 +1,4 @@
-
+// registrations.js
 import { fetchData } from '../utils/api.js';
 import { showCustomMessage, closeModal, openModal } from '../utils/ui.js';
 
@@ -22,7 +22,7 @@ export async function populateRegistrationDropdowns() {
         events.forEach(event => {
             const option = document.createElement('option');
             option.value = event.idEvento;
-            option.textContent = `${event.titulo} (${event.edicao})`;
+            option.textContent = `${event.titulo} (${event.edicao})`; // Adiciona edição aqui
             registrationEventSelect.appendChild(option);
         });
     } else {
@@ -98,7 +98,11 @@ export async function loadRegistrations() {
         const event = events?.find(e => e.idEvento === activity?.fk_idEvento);
 
         const participantMatch = participant?.nome.toLowerCase().includes(searchTerm) || false;
-        const eventMatch = event?.titulo.toLowerCase().includes(searchTerm) || false;
+        
+        // Inclui a edição do evento na pesquisa
+        const eventTitleWithEdition = event ? `${event.titulo} (${event.edicao})`.toLowerCase() : '';
+        const eventMatch = eventTitleWithEdition.includes(searchTerm) || false;
+        
         const activityMatch = activity?.titulo.toLowerCase().includes(searchTerm) || false;
 
         let yearMatch = true;
@@ -119,11 +123,12 @@ export async function loadRegistrations() {
             const activity = activities?.find(a => a.idAtividade === registration.fk_idAtividade);
             const event = events?.find(e => e.idEvento === activity?.fk_idEvento);
 
+            const eventDisplay = event ? `${event.titulo} (${event.edicao})` : 'N/A'; // Formata para exibição
+            
             const row = registrationsTableBody.insertRow();
             row.innerHTML = `
                 <td>${participant ? participant.nome : 'N/A'}</td>
-                <td>${event ? event.titulo : 'N/A'}</td>
-                <td>${activity ? activity.titulo : 'N/A'}</td>
+                <td>${eventDisplay}</td> <td>${activity ? activity.titulo : 'N/A'}</td>
                 <td>${registration.tipo}</td>
                 <td class="actions">
                     <button class="action-btn view-btn" onclick="window.viewRegistration('${registration.idParticipacao}')"><i class="fas fa-eye"></i></button>
@@ -167,7 +172,7 @@ export async function saveRegistration(e) {
 
     if (result) {
         closeModal('registration');
-        allRegistrationsData = [];
+        allRegistrationsData = []; // Limpa o cache para recarregar
         loadRegistrations();
     }
 }
@@ -182,9 +187,10 @@ export async function viewRegistration(id) {
     if (registration) {
         let details = `
 Participante: ${participant ? participant.nome : 'N/A'}
-Evento: ${event ? event.titulo : 'N/A'}
+Evento: ${event ? `${event.titulo} (${event.edicao})` : 'N/A'} 
 Atividade: ${activity ? activity.titulo : 'N/A'}
 Tipo de Participação: ${registration.tipo}
+
         `;
         showCustomMessage('Detalhes da Inscrição', details);
     }
@@ -205,7 +211,7 @@ export async function deleteRegistration(id) {
         const result = await fetchData(`http://localhost:3000/participacao/${id}`, 'DELETE');
         if (result) {
             showCustomMessage('Sucesso', 'Inscrição excluída com sucesso!');
-            allRegistrationsData = [];
+            allRegistrationsData = []; // Limpa o cache para recarregar
             loadRegistrations();
         }
     }

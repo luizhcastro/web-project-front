@@ -122,6 +122,7 @@ CPF: ${participant.cpf}
 Telefone: ${participant.telefone}
 Email: ${participant.email}
 Nascimento: ${formattedBirthDate}
+
         `;
         showCustomMessage('Detalhes do Participante', details);
     }

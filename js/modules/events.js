@@ -1,4 +1,4 @@
-
+// events.js
 import { fetchData } from '../utils/api.js';
 import { showCustomMessage, closeModal, openModal } from '../utils/ui.js';
 import { loadDashboardData, loadUpcomingEvents } from './dashboard.js';
@@ -122,16 +122,18 @@ export async function viewEvent(id) {
         let palestranteCount = 0;
         let mediadorCount = 0;
         let monitorCount = 0;
-        let ouvinteCount = 0;
-        let totalParticipants = 0;
+        let ouvinteCount = 0; // Total de participações de ouvintes (pode incluir duplicatas)
+        let totalParticipations = 0;
 
         const eventActivities = activities ? activities.filter(a => a.fk_idEvento === event.idEvento) : [];
         const eventActivityIds = new Set(eventActivities.map(a => a.idAtividade));
 
+        const uniqueListeners = new Set(); // Para contar ouvintes únicos
+        
         if (participations) {
             participations.forEach(p => {
                 if (eventActivityIds.has(p.fk_idAtividade)) {
-                    totalParticipants++;
+                    totalParticipations++;
                     switch (p.tipo) {
                         case 'organizador':
                             organizadorCount++;
@@ -147,14 +149,20 @@ export async function viewEvent(id) {
                             break;
                         case 'ouvinte':
                             ouvinteCount++;
+                            // Adiciona o id do participante ao Set de ouvintes únicos
+                            if (p.fk_idParticipante) {
+                                uniqueListeners.add(p.fk_idParticipante);
+                            }
                             break;
                     }
                 }
             });
         }
 
+        const uniqueListenersCount = uniqueListeners.size; // Tamanho do Set de ouvintes únicos
+
         const receita = event.tipo === 'pago'
-            ? `R$ ${(ouvinteCount * (event.taxa || 0)).toFixed(2).replace('.', ',')}`
+            ? `R$ ${(uniqueListenersCount * (event.taxa || 0)).toFixed(2).replace('.', ',')}` // Receita baseada em ouvintes únicos
             : '-';
 
         let details = `
@@ -171,8 +179,10 @@ Mediadores: ${mediadorCount}
 Monitores: ${monitorCount}
 Ouvintes: ${ouvinteCount}
 
-Total de Participantes: ${totalParticipants}
+Total de Participações: ${totalParticipations}
+Ouvintes únicos: ${uniqueListenersCount}
 Receita: ${receita}
+
         `;
         showCustomMessage('Detalhes do Evento', details);
     }
@@ -205,3 +215,10 @@ export async function deleteEvent(id) {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-event')?.addEventListener('submit', saveEvent);
 });
+
+// Exporta as funções para serem acessíveis globalmente
+window.loadEvents = loadEvents;
+window.saveEvent = saveEvent;
+window.viewEvent = viewEvent;
+window.editEvent = editEvent;
+window.deleteEvent = deleteEvent;
